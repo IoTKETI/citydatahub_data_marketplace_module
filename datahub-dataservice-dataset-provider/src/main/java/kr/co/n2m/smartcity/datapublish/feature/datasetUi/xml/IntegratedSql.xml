@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.datapublish.feature.datasetUi.mapper.IntegratedMapper">
+    <sql id="limitPage">
+    	<if test="paging">
+        	OFFSET #{startIndex} LIMIT #{pageListSize}
+        </if>
+    </sql>
+    
+    <sql id="whereByDatasetUsageRefundsUser">
+        WHERE 1=1
+          AND usage.req_user_id = #{loginUserId}
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND usage_refund.created_at >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND usage_refund.created_at <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(srchText)">
+	          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(srchTextCondition, 'datasetTitle')">
+	              AND dataset.ds_title LIKE CONCAT('%', #{srchText},'%')
+	          </if>
+	          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(srchTextCondition, 'refundReason')">
+	              AND usage_refund.reason LIKE CONCAT('%', #{srchText},'%')
+	          </if>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(srchRefundStatus)">
+              AND usage_refund.status = #{srchRefundStatus}
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(srchTrafficType)">
+              AND price.traffic_type = #{srchTrafficType}
+          </if>
+    </sql>
+    <sql id="orderByDatasetUsageRefundsUser">
+        ORDER BY usage.req_created DESC
+    </sql>
+    <select id="selectDatasetUsageRefundsCountByUser" parameterType="SrchIntegratedVo" resultType="int">
+        SELECT COUNT(*) 
+          FROM data_publish.dh_dataset_userequest usage
+     LEFT JOIN data_publish.dh_dataset_userequest_pay usage_pay    ON (usage.req_oid           = usage_pay.req_id)
+     LEFT JOIN data_publish.dh_dataset_price          price        ON (usage_pay.ds_price_id   = price.ds_price_id)
+     LEFT JOIN data_publish.dh_dataset                dataset      ON (usage.ds_oid            = dataset.ds_oid)
+    INNER JOIN (
+         SELECT * 
+           FROM data_publish.dh_dataset_userequest_refund
+          WHERE (req_id, refund_degree) IN ( 
+                SELECT req_id , MAX(refund_degree)
+                  FROM data_publish.dh_dataset_userequest_refund 
+              GROUP BY req_id
+          )
+     ) usage_refund ON (usage.req_oid = usage_refund.req_id)
+        <include refid="whereByDatasetUsageRefundsUser"/>
+    </select>
+    <select id="selectDatasetUsageRefundsListByUser" parameterType="SrchIntegratedVo" resultType="CamelCaseMap">
+        SELECT usage.ds_oid                  AS dataset_id 
+             , usage.req_oid                 AS request_id
+             , usage.req_user_id             AS request_user_id
+             , usage.req_created             AS request_created_at
+             
+             , usage_pay.pay_id              AS pay_id
+             , usage_pay.completed_at        AS completed_at
+             , usage_pay.expired_at          AS expired_at
+             
+             , price.daily_limit             AS limit
+             , price.traffic_type            AS traffic_type
+             
+             , period.period_cd              AS period_cd
+             , period.price                  AS price
+             
+             , usage_refund.refund_id        AS refund_id
+             , c1.code_id                    AS refund_status
+             , c1.code_name                  AS refund_status_nm
+             , usage_refund.refund_degree    AS refund_degree
+             , usage_refund.reason           AS refund_reason
+             , usage_refund.created_at       AS refund_created_at
+             , usage_refund.update_at        AS refund_update_at
+             , usage_refund.refuse_reason    AS refund_refuse_reason
+             , usage_refund.refuse_at        AS refund_refuse_at
+             
+             , dataset.ds_title              AS dataset_title
+          FROM data_publish.dh_dataset_userequest     usage
+     LEFT JOIN data_publish.dh_dataset_userequest_pay usage_pay    ON (usage.req_oid           = usage_pay.req_id)
+     LEFT JOIN data_publish.dh_dataset_price          price        ON (usage_pay.ds_price_id   = price.ds_price_id)
+     LEFT JOIN data_publish.dh_dataset_period_price   period       ON (usage_pay.ds_period_id  = period.ds_period_id)
+     LEFT JOIN data_publish.dh_dataset                dataset      ON (usage.ds_oid            = dataset.ds_oid)
+    INNER JOIN (
+         SELECT * 
+           FROM data_publish.dh_dataset_userequest_refund
+          WHERE (req_id, refund_degree) IN ( 
+                SELECT req_id , MAX(refund_degree)
+                  FROM data_publish.dh_dataset_userequest_refund 
+              GROUP BY req_id
+          )
+     ) usage_refund ON (usage.req_oid = usage_refund.req_id)
+     LEFT JOIN data_publish.portal_code_tb            c1           ON (usage_refund.status = c1.code_id AND c1.codegroup_id = 'CG_00036')
+          <include refid="whereByDatasetUsageRefundsUser"/>
+          <include refid="orderByDatasetUsageRefundsUser"/>
+          <include refid="limitPage"/>
+    </select>
+    
+    <sql id="whereByDatasetUsageRefundsProvider">
+        WHERE 1=1
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND usage_refund.created_at >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND usage_refund.created_at <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(srchRefundStatus)">
+              AND usage_refund.status = #{srchRefundStatus}
+          </if>
+    </sql>
+    <sql id="orderByDatasetUsageRefundsProvider">
+        ORDER BY usage.req_created DESC
+    </sql>
+    <select id="selectDatasetUsageRefundsCountByProvider" parameterType="SrchIntegratedVo" resultType="int">
+        SELECT COUNT(*) 
+          FROM data_publish.dh_dataset_userequest usage
+    INNER JOIN (
+         SELECT * 
+           FROM data_publish.dh_dataset
+          WHERE ds_provider_id = #{loginUserId}
+    ) dataset ON (usage.ds_oid = dataset.ds_oid)
+    INNER JOIN (
+         SELECT * 
+           FROM data_publish.dh_dataset_userequest_refund
+          WHERE (req_id, refund_degree) IN ( 
+                SELECT req_id , MAX(refund_degree)
+                  FROM data_publish.dh_dataset_userequest_refund 
+              GROUP BY req_id
+          )
+     ) usage_refund ON (usage.req_oid = usage_refund.req_id)
+        <include refid="whereByDatasetUsageRefundsProvider"/>
+    </select>
+    <select id="selectDatasetUsageRefundsListByProvider" parameterType="SrchIntegratedVo" resultType="CamelCaseMap">
+        SELECT usage.ds_oid                  AS dataset_id 
+             , usage.req_oid                 AS request_id
+             , usage.req_user_id             AS request_user_id
+             , usage.req_created             AS request_created_at
+             
+             , usage_pay.pay_id              AS pay_id
+             , usage_pay.completed_at        AS completed_at
+             , usage_pay.expired_at          AS expired_at
+             
+             , price.daily_limit             AS limit
+             , price.traffic_type            AS traffic_type
+             
+             , period.period_cd              AS period_cd
+             , period.price                  AS price
+             
+             , usage_refund.refund_id        AS refund_id
+             , c1.code_id                    AS refund_status
+             , c1.code_name                  AS refund_status_nm
+             , usage_refund.refund_degree    AS refund_degree
+             , usage_refund.reason           AS refund_reason
+             , usage_refund.created_at       AS refund_created_at
+             , usage_refund.update_at        AS refund_update_at
+             , usage_refund.refuse_reason    AS refund_refuse_reason
+             , usage_refund.refuse_at        AS refund_refuse_at
+             
+             , dataset.ds_title              AS dataset_title
+          FROM data_publish.dh_dataset_userequest     usage
+     LEFT JOIN data_publish.dh_dataset_userequest_pay usage_pay    ON (usage.req_oid           = usage_pay.req_id)
+     LEFT JOIN data_publish.dh_dataset_price          price        ON (usage_pay.ds_price_id   = price.ds_price_id)
+     LEFT JOIN data_publish.dh_dataset_period_price   period       ON (usage_pay.ds_period_id  = period.ds_period_id)
+    INNER JOIN (
+         SELECT * 
+           FROM data_publish.dh_dataset
+          WHERE ds_provider_id = #{loginUserId}
+    ) dataset ON (usage.ds_oid = dataset.ds_oid)
+    INNER JOIN (
+         SELECT * 
+           FROM data_publish.dh_dataset_userequest_refund
+          WHERE (req_id, refund_degree) IN ( 
+                SELECT req_id , MAX(refund_degree)
+                  FROM data_publish.dh_dataset_userequest_refund 
+              GROUP BY req_id
+          )
+     ) usage_refund ON (usage.req_oid = usage_refund.req_id)
+     LEFT JOIN data_publish.portal_code_tb            c1           ON (usage_refund.status = c1.code_id AND c1.codegroup_id = 'CG_00036')
+          <include refid="whereByDatasetUsageRefundsProvider"/>
+          <include refid="orderByDatasetUsageRefundsProvider"/>
+          <include refid="limitPage"/>
+    </select>
+</mapper>

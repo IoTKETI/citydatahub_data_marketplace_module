@@ -1,0 +1,16 @@
+#common
+
+server:
+  port: 7940
+  
+spring:
+  application:
+    name: dh-dataservice-notifier
+  profiles:
+    include:
+    - env
+    active: dev
+    
+logging:
+  level:
+    kr.co.n2m.smartcity: debug

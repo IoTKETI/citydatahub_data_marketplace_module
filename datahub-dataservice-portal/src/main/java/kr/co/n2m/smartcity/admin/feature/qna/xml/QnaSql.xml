@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.qna.mapper.QnaMapper">
+	<sql id="limitPage">
+		OFFSET #{startIndex} LIMIT #{pageListSize}
+	</sql>
+    <sql id="whereByQna">
+        WHERE 1=1
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, '')">
+                AND q.qna_title LIKE CONCAT('%', #{schValue}, '%')
+                 OR q.qna_question_usr_id LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'title')">
+                AND q.qna_title LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'writer')">
+                AND q.qna_question_usr_id LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND q.qna_question_dt >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND q.qna_question_dt <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schCondition2)">
+            AND q.qna_question_type_cd = #{schCondition2}
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schCondition3)">
+            AND q.qna_status = #{schCondition3}
+        </if>
+        <!-- userPortal mypage Qna use -->
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schCondition4)">
+            AND q.qna_question_usr_id = #{schCondition4}
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(totalSch)">
+            AND (q.qna_title ILIKE CONCAT('%', #{totalSch}, '%')
+                OR q.qna_question ILIKE CONCAT('%', #{totalSch}, '%')
+                OR q.qna_answer ILIKE CONCAT('%', #{totalSch}, '%'))
+        </if>        
+    </sql>
+    <sql id="orderByQna">
+	    <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+            <choose>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'qnaId')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY q.qna_oid DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY q.qna_oid ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY q.qna_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'qnaTitle')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY q.qna_title DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY q.qna_title ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY q.qna_title DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'qnaQuestionTypeNm')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY c1.code_sort DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY c1.code_sort ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY q.qna_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'qnaQuestionUsrNm')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY q.question_usr_nm DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY q.question_usr_nm ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY q.qna_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'qnaStatusNm')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY c2.code_sort DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY c2.code_sort ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY q.qna_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'qnaQuestionDt')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY q.qna_question_dt DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY q.qna_question_dt ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY q.qna_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    ORDER BY q.qna_oid DESC
+                </otherwise>
+            </choose>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+            ORDER BY q.qna_oid DESC
+        </if>
+    </sql>
+    
+	<select id="selectQnaCount" resultType="int">
+		SELECT count(*)
+		  FROM portal.portal_qna_tb q
+		<include refid="whereByQna"/>
+	</select>
+	<select id="selectQnaList" resultType="qnaVo">
+		SELECT ROW_NUMBER() OVER(order by q.qna_oid ASC) AS rownum
+		     , q.qna_oid
+		     , q.qna_id                                 
+		     , q.qna_title                               
+		     , q.qna_question
+		     , q.qna_answer
+		     , q.qna_question_type_cd                    
+		     , c1.code_name                              AS qna_question_type_nm
+		     , q.qna_question_usr_id
+		     , q.qna_status
+             , c2.code_name                              AS qna_status_nm
+		     , q.qna_question_dt                         
+          FROM portal.portal_qna_tb q
+     LEFT JOIN portal.portal_code_tb c1
+            ON c1.code_id = q.qna_question_type_cd
+     LEFT JOIN portal.portal_code_tb c2
+            ON c2.code_id = q.qna_status
+        <include refid="whereByQna"/>
+        <include refid="orderByQna"/>
+		<include refid="limitPage" />
+	</select>
+	<select id="selectQnaListMain" resultType="qnaVo">
+		SELECT ROW_NUMBER() OVER(order by q.qna_oid ASC) AS rownum
+		     , q.qna_oid
+		     , q.qna_id                                 
+		     , q.qna_title                               
+		     , q.qna_question_dt                         
+          FROM portal.portal_qna_tb q
+        WHERE 1=1
+        ORDER BY q.qna_oid DESC
+		LIMIT 7
+	</select>
+	<insert id="insertQna" parameterType="srchQnaVo" useGeneratedKeys="true" keyProperty="qnaOid">
+		INSERT INTO portal.portal_qna_tb
+		(
+		       qna_oid
+		     , qna_title
+             , qna_question
+             , qna_status
+             , qna_question_type_cd
+             , qna_question_usr_id
+             , qna_question_dt
+		)
+		VALUES
+		(
+			   #{qnaOid}
+			 , #{qnaTitle}
+			 , #{qnaQuestion}
+			 , 'answerWait'
+			 , #{qnaQuestionTypeCd}
+			 , #{qnaQuestionUsrId}
+			 , current_timestamp
+		)
+	</insert>
+	
+    <resultMap type="qnaFileVo" id="qnaFileMap">
+        <id property="qnafileOid" column="sub_qnafile_oid"/>
+        <result property="qnafileOrgNm" column="sub_qnafile_org_nm"/>
+        <result property="qnafileSaveNm" column="sub_qnafile_save_nm"/>
+        <result property="qnafileSavePath" column="sub_qnafile_save_path"/>
+        <result property="qnafileSize" column="sub_qnafile_size"/>
+    </resultMap>
+    <resultMap type="qnaVo" id="qnaMap">
+        <id property="qnaOid" column="main_qna_oid"/>
+        <result property="qnaId" column="main_qna_id"/>
+        <result property="qnaQuestionUsrId" column="main_qna_question_usr_id"/>
+        <result property="qnaQuestionDt" column="main_qna_question_dt"/>
+        <result property="qnaQuestionTypeCd" column="main_qna_question_type_cd"/>
+        <result property="qnaStatus" column="main_qna_status"/>
+        <result property="qnaStatusNm" column="main_qna_status_nm"/>
+        <result property="qnaQuestionTypeNm" column="main_qna_question_type_nm"/>
+        <result property="qnaCnt" column="main_qna_cnt"/>
+        <result property="qnaTitle" column="main_qna_title"/>
+        <result property="qnaQuestion" column="main_qna_question"/>
+        <result property="qnaAnswerUsrId" column="main_qna_answer_usr_id"/>
+        <result property="qnaAnswerDt" column="main_qna_answer_dt"/>
+        <result property="qnaAnswer" column="main_qna_answer"/>
+        <collection property="fileList" resultMap="qnaFileMap" />
+    </resultMap>
+    <select id="selectQna" resultMap="qnaMap">
+        SELECT q.qna_oid                                 AS main_qna_oid
+             , q.qna_id                                  AS main_qna_id
+             , q.qna_question_usr_id                     AS main_qna_question_usr_id
+             , q.qna_question_dt                         AS main_qna_question_dt
+             , q.qna_question_type_cd                    AS main_qna_question_type_cd
+             , c1.code_name                              AS main_qna_question_type_nm
+             , q.qna_status                              AS main_qna_status
+             , c2.code_name                              AS main_qna_status_nm
+             , q.qna_cnt                                 AS main_qna_cnt
+             , q.qna_title                               AS main_qna_title
+             , q.qna_question                            AS main_qna_question
+             , q.qna_answer_usr_id                       AS main_qna_answer_usr_id
+             , q.qna_answer_dt                           AS main_qna_answer_dt
+             , q.qna_answer                              AS main_qna_answer
+             , f.qnafile_oid                             AS sub_qnafile_oid      
+             , f.qnafile_org_nm                          AS sub_qnafile_org_nm   
+             , f.qnafile_save_nm                         AS sub_qnafile_save_nm  
+             , f.qnafile_save_path                       AS sub_qnafile_save_path
+             , f.qnafile_size                            AS sub_qnafile_size   
+          FROM portal.portal_qna_tb q
+     LEFT JOIN portal.portal_code_tb c1
+            ON c1.code_id = q.qna_question_type_cd
+     LEFT JOIN portal.portal_code_tb c2
+            ON c2.code_id = q.qna_status
+     LEFT JOIN portal.portal_qnafile_tb f
+            ON f.qna_oid = q.qna_oid
+         WHERE q.qna_oid = #{qnaOid}
+    </select>
+    <update id="updateQna" parameterType="srchQnaVo">
+        UPDATE portal.portal_qna_tb 
+           SET qna_title = #{qnaTitle}
+             , qna_question = #{qnaQuestion}
+             , qna_question_type_cd = #{qnaQuestionTypeCd}
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(qnaAnswer)">
+            , qna_answer = #{qnaAnswer}	
+            , qna_status = 'answerComplete'
+            , qna_answer_usr_id = #{qnaAnswerUsrId}
+            , qna_answer_dt = current_timestamp
+            </if> 
+         WHERE qna_oid = #{qnaOid}
+    </update>
+    <update id="updateQnaPart" parameterType="srchQnaVo">
+    	UPDATE portal.portal_qna_tb
+    	  <set>
+    	  	<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(qnaAnswer)">
+            qna_answer        = #{qnaAnswer},
+            qna_status        = 'answerComplete',
+		    qna_answer_usr_id = #{qnaAnswerUsrId},
+		    qna_answer_dt     = current_timestamp
+    	  	</if>
+    	  </set> 
+         WHERE qna_oid = #{qnaOid}
+    </update>
+    <delete id="deleteQna" parameterType="srchQnaVo">
+        DELETE FROM portal.portal_qna_tb WHERE qna_oid = #{qnaOid}
+    </delete>
+    <update id="updateQnaCnt" parameterType="long">
+        UPDATE portal.portal_qna_tb
+           SET qna_cnt = qna_cnt + 1
+         WHERE qna_oid = #{qnaOid}
+    </update>
+</mapper>

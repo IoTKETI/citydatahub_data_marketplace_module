@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.program.mapper.ProgramMapper">
+	<sql id="limitPage">
+		OFFSET #{startIndex} LIMIT #{pageListSize}
+	</sql>
+	<sql id="whereByProgram">
+		WHERE 1=1
+		  AND t1.programgroup_oid = #{programgroupOid}
+	</sql>
+	<sql id="orderByProgram">
+		ORDER BY rownum ASC
+	</sql>
+	<select id="selectProgramCount" resultType="int" parameterType="srchProgramVo">
+		SELECT COUNT(*) 
+		  FROM portal.portal_program_tb t1
+	INNER JOIN portal.portal_programgroup_tb t2
+	        ON (t1.programgroup_oid = t2.programgroup_oid)
+		<include refid="whereByProgram"/>
+	</select>
+	<select id="selectAuthProgramList" resultType="programVo">
+		SELECT t6.program_url
+		     , t2.menu_nm
+		     , t3.write_yn
+		     , t3.read_yn
+		     , t3.modified_yn
+		     , t3.delete_yn
+          FROM portal.portal_programgroup_tb t1
+     LEFT JOIN portal.portal_menu_tb t2             on (t1.programgroup_oid = t2.program_grp_oid)
+     LEFT JOIN portal.portal_authgroupmenumap_tb t3 on (t2.menu_oid         = t3.menu_oid)
+     LEFT JOIN portal.portal_authgroup_tb t4        on (t3.authgroup_oid    = t4.authgroup_oid)
+     LEFT JOIN portal.portal_authgroupusermap_tb t5 on (t4.authgroup_oid    = t5.authgroup_oid)
+     LEFT JOIN portal.portal_program_tb t6          on (t1.programgroup_oid = t6.programgroup_oid)
+         WHERE t5.user_id = #{programCreUsrId}
+           AND t1.programgroup_use_fl	= 'Y'
+           AND t4.authgroup_use_fl 		= 'Y'
+           AND t6.program_use_fl 		= 'Y'
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(programUrl)">
+           AND t6.program_url = #{programUrl}
+        </if>
+           AND t6.program_use_fl 		= 'Y'
+           AND ((t6.program_division = 'write' and t3.write_yn    = 'Y')
+            OR (t6.program_division  = 'read' and t3.read_yn     = 'Y')
+            OR (t6.program_division  = 'update' and t3.modified_yn = 'Y')
+            OR (t6.program_division  = 'delete' and t3.delete_yn   = 'Y'))
+	</select>
+	<select id="selectProgramList" resultType="programVo">
+		SELECT row_number() over(ORDER BY t1.program_cre_dt ASC, t1.program_oid ASC) AS rownum
+		     , t1.program_oid
+			 , t1.program_url
+			 , t1.program_nm
+			 , t1.program_division
+			 , c.code_name AS program_division_nm
+			 , t1.program_desc
+			 , t1.program_cre_dt
+			 , t1.program_upt_dt
+			 , t1.program_cre_usr_id
+			 , t1.program_upt_usr_id
+			 , t1.program_use_fl
+			 , t1.program_use_token_yn
+			 , t1.programgroup_oid
+			 , t2.programgroup_nm
+		  FROM portal.portal_program_tb t1
+	 LEFT JOIN portal.portal_programgroup_tb t2
+	        ON (t1.programgroup_oid = t2.programgroup_oid)
+	 LEFT JOIN portal.portal_code_tb c
+            ON (t1.program_division = c.code_id)
+		 <include refid="whereByProgram"/>
+		 <include refid="orderByProgram"/>
+		 <include refid="limitPage"/>
+	</select>
+	<select id="selectProgram" parameterType="hashmap" resultType="programVo">
+		SELECT t1.program_oid
+			 , t1.program_url
+			 , t1.program_nm
+			 , t1.program_division
+			 , t1.program_desc
+			 , t1.program_cre_dt
+			 , t1.program_upt_dt
+			 , t1.program_cre_usr_id
+			 , t1.program_upt_usr_id
+			 , t1.program_use_fl
+			 , t1.program_use_token_yn
+			 , t1.programgroup_oid
+			 , t2.programgroup_nm
+		  FROM portal.portal_program_tb t1
+	 LEFT JOIN portal.portal_programgroup_tb t2 ON (t1.programgroup_oid = t2.programgroup_oid)
+		 WHERE t1.programGroupOid = #{programGroupOid}
+		   AND t1.program_oid = #{programOid}
+	</select>
+	<insert id="insertProgram" parameterType="srchProgramVo">
+		INSERT INTO portal.portal_program_tb
+			 ( program_oid
+			 , program_url
+			 , program_nm
+			 , program_division
+			 , program_desc
+			 , program_cre_dt
+			 , program_cre_usr_id
+			 , program_use_fl
+			 , program_use_token_yn
+			 , programgroup_oid
+			 ) VALUES 
+			 ( #{programOid}
+			 , #{programUrl}
+			 , #{programNm}
+			 , #{programDivision}
+			 , #{programDesc}
+			 , current_timestamp
+			 , #{programCreUsrId}
+			 , #{programUseFl}
+			 , #{programUseTokenYn}
+			 , #{programgroupOid}
+			 )
+	</insert>
+	<update id="updateProgram" parameterType="srchProgramVo">
+		UPDATE portal.portal_program_tb 
+			SET program_url         = #{programUrl}      
+			  , program_nm          = #{programNm}
+			  , program_division    = #{programDivision}       
+			  , program_desc        = #{programDesc}     
+			  , program_upt_dt      = current_timestamp            
+			  , program_upt_usr_id  = #{programCreUsrId}
+			  , program_use_fl      = #{programUseFl}
+			  , program_use_token_yn= #{programUseTokenYn}
+			  , programgroup_oid    = #{programgroupOid} 
+		 WHERE program_oid = #{programOid}
+	</update>
+	<delete id="deleteProgram" parameterType="srchProgramVo">
+		DELETE FROM portal.portal_program_tb 
+		 WHERE programgroup_oid = #{programGroupOid}
+		   AND program_oid = #{programOid}
+	</delete>
+</mapper>
+

@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.notice.mapper.NoticeMapper">
+    <sql id="limitPage">
+        OFFSET #{startIndex} LIMIT #{pageListSize}
+    </sql>
+    <sql id="whereByNotice">
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, '')">
+                AND n.notice_title LIKE CONCAT('%', #{schValue}, '%')
+                 OR n.notice_cre_usr_id LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'title')">
+                AND n.notice_title LIKE CONCAT('%', #{schValue }, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'writer')">
+                AND n.notice_cre_usr_id  LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND n.notice_cre_dt >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND n.notice_cre_dt <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schCondition2)">
+            AND n.notice_first_fl = #{schCondition2}
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schCondition3)">
+            AND n.notice_main_pop_fl = #{schCondition3}
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(totalSch)">
+            AND (n.notice_title ILIKE CONCAT('%', #{totalSch}, '%')
+                OR n.notice_content ILIKE CONCAT('%', #{totalSch}, '%'))
+        </if>        
+    </sql>
+    <sql id="orderByNotice">
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+            <choose>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'noticeId')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY n.notice_oid DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY n.notice_oid ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY n.notice_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'noticeTitle')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY n.notice_title DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY n.notice_title ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY n.notice_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'noticeCreUsrNm')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY n.notice_cre_usr_id DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY n.notice_cre_usr_id ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY n.notice_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'noticeMainPopFl')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY n.notice_main_pop_fl DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY n.notice_main_pop_fl ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY n.notice_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'noticeCreDt')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY n.notice_cre_dt DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY n.notice_cre_dt ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY n.notice_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'fileCnt')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY fileCnt DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY fileCnt ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY n.notice_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    ORDER BY n.notice_oid DESC
+                </otherwise>
+            </choose>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+            ORDER BY n.notice_oid DESC
+        </if>
+    </sql>
+    <select id="selectNoticeCount" resultType="int">
+        SELECT count(*)
+          FROM portal.portal_notice_tb n
+         WHERE n.notice_first_fl = 'N'
+        <include refid="whereByNotice"/>
+    </select>
+    <select id="selectNoticeList" resultType="noticeVo">
+        SELECT n.*
+          FROM (
+        <if test="curPage == 1 and @kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(totalSch)">
+           SELECT n.notice_oid
+                , n.notice_id
+                , n.notice_title
+                , n.notice_content
+                , n.notice_first_fl
+                , n.notice_main_pop_fl
+                , n.notice_cre_usr_id
+                , n.notice_cre_dt
+                , count(f.noticefile_oid) AS fileCnt
+             FROM portal.portal_notice_tb n
+        LEFT JOIN portal.portal_noticefile_tb f ON (n.notice_oid = f.notice_oid)
+            WHERE n.notice_first_fl = 'Y'
+         GROUP BY n.notice_oid
+                , n.notice_cre_usr_id
+        UNION ALL
+        </if>
+          SELECT a.*
+            FROM 
+               (
+                   SELECT n.notice_oid
+                        , n.notice_id
+                        , n.notice_title
+                        , n.notice_content
+                        , n.notice_first_fl
+                        , n.notice_main_pop_fl
+                        , n.notice_cre_usr_id
+                        , n.notice_cre_dt
+                        , count(f.noticefile_oid) AS fileCnt
+                     FROM portal.portal_notice_tb n
+                LEFT JOIN portal.portal_noticefile_tb f ON (n.notice_oid = f.notice_oid)
+                    WHERE n.notice_first_fl = 'N'
+                 <include refid="whereByNotice"/>
+                 GROUP BY n.notice_oid
+                        , n.notice_cre_usr_id
+                 <include refid="orderByNotice" />
+                 <include refid="limitPage"/> 
+                ) a
+            ) n
+    </select>
+    <select id="selectNoticeListMain" resultType="noticeVo">
+        SELECT n.*
+          FROM (
+           SELECT n.notice_oid
+                , n.notice_id
+                , n.notice_title
+                , n.notice_cre_dt
+             FROM portal.portal_notice_tb n
+            WHERE n.notice_first_fl = 'Y'
+        UNION ALL
+          SELECT a.*
+            FROM 
+               (
+           SELECT n.notice_oid
+                , n.notice_id
+                , n.notice_title
+                , n.notice_cre_dt
+            FROM portal.portal_notice_tb n
+           WHERE n.notice_first_fl = 'N'
+           ORDER BY n.notice_oid DESC
+           LIMIT 5
+                ) a
+            ) n
+    </select>
+    <insert id="insertNotice" parameterType="srchNoticeVo">
+        INSERT INTO portal.portal_notice_tb
+             (
+               notice_oid
+             , notice_title
+             , notice_content
+             , notice_first_fl
+             , notice_admin_fl
+               <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(noticeMainPopFl, 'Y')">
+             , notice_main_pop_fl
+             , notice_main_start_dt
+             , notice_main_end_dt
+               </if>
+             , notice_cre_usr_id
+             , notice_cre_dt
+             )
+        VALUES
+             (
+               #{noticeOid}
+             , #{noticeTitle}
+             , #{noticeContent}
+             , #{noticeFirstFl}
+             , #{noticeAdminFl}
+               <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(noticeMainPopFl, 'Y')">
+             , #{noticeMainPopFl}
+             , TO_TIMESTAMP(#{noticeMainStartDt}, 'YYYY-MM-DD HH24:MI:SS')
+             , TO_TIMESTAMP(#{noticeMainEndDt}, 'YYYY-MM-DD HH24:MI:SS')
+               </if>
+             , #{noticeCreUsrId}
+             , current_timestamp
+             )
+    </insert>
+    <resultMap type="noticeFileVo" id="noticeFileMap">
+        <id property="noticefileOid" column="sub_noticefile_oid"/>
+        <result property="noticefileOrgNm" column="sub_noticefile_org_nm"/>
+        <result property="noticefileSavedNm" column="sub_noticefile_saved_nm"/>
+        <result property="noticefileSavePath" column="sub_noticefile_save_path"/>
+        <result property="noticefileSizeByte" column="sub_noticefile_size_byte"/>
+    </resultMap>
+    <resultMap type="noticeVo" id="noticeMap">
+        <id property="noticeOid" column="main_notice_oid"/>
+        <result property="noticeId" column="main_notice_id"/>
+        <result property="noticeCreUsrId" column="main_notice_cre_usr_id"/>
+        <result property="noticeMainPopFl" column="main_notice_main_pop_fl"/>
+        <result property="noticeMainStartDt" column="main_notice_main_start_dt"/>
+        <result property="noticeMainEndDt" column="main_notice_main_end_dt"/>
+        <result property="noticeFirstFl" column="main_notice_first_fl"/>
+        <result property="noticeTitle" column="main_notice_title"/>
+        <result property="noticeContent" column="main_notice_content"/>
+        <result property="noticeCnt" column="main_notice_cnt"/>
+        <result property="noticeCreDt" column="main_notice_cre_dt"/>
+        <collection property="fileList" resultMap="noticeFileMap" />
+    </resultMap>
+    <select id="selectNotice" resultMap="noticeMap" parameterType="long">
+        SELECT n.notice_oid                     AS main_notice_oid
+             , n.notice_id                      AS main_notice_id
+             , n.notice_main_pop_fl             AS main_notice_main_pop_fl  
+             , n.notice_main_start_dt           AS main_notice_main_start_dt
+             , n.notice_main_end_dt             AS main_notice_main_end_dt  
+             , n.notice_first_fl                AS main_notice_first_fl     
+             , n.notice_title                   AS main_notice_title        
+             , n.notice_content                 AS main_notice_content      
+             , n.notice_cre_usr_id              AS main_notice_cre_usr_id
+             , n.notice_cnt                     AS main_notice_cnt
+             , n.notice_cre_dt                  AS main_notice_cre_dt
+             , f.noticefile_oid                 AS sub_noticefile_oid      
+             , f.noticefile_org_nm              AS sub_noticefile_org_nm   
+             , f.noticefile_saved_nm            AS sub_noticefile_saved_nm 
+             , f.noticefile_save_path           AS sub_noticefile_save_path
+             , f.noticefile_size_byte           AS sub_noticefile_size_byte
+          FROM portal.portal_notice_tb n
+     LEFT JOIN portal.portal_noticefile_tb f
+            ON (f.notice_oid = n.notice_oid)
+         WHERE n.notice_oid = #{noticeOid}
+    </select>
+    <update id="updateNotice" parameterType="srchNoticeVo">
+        UPDATE portal.portal_notice_tb 
+           SET notice_title = #{noticeTitle}
+             , notice_content = #{noticeContent}
+             , notice_main_pop_fl = #{noticeMainPopFl}
+               <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(noticeMainPopFl, 'Y')">
+             , notice_main_start_dt = TO_TIMESTAMP(#{noticeMainStartDt}, 'YYYY-MM-DD HH24:MI:SS')
+             , notice_main_end_dt = TO_TIMESTAMP(#{noticeMainEndDt}, 'YYYY-MM-DD HH24:MI:SS')
+               </if>
+               <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(noticeMainPopFl, 'N')">
+             , notice_main_start_dt = NULL
+             , notice_main_end_dt = NULL
+               </if>
+             , notice_first_fl = #{noticeFirstFl}
+             , notice_upt_usr_id = #{noticeUptUsrId}
+             , notice_upt_dt = current_timestamp
+         WHERE notice_oid = #{noticeOid}
+    </update>
+    <delete id="deleteNotice" parameterType="srchNoticeVo">
+        DELETE FROM portal.portal_notice_tb WHERE notice_id = #{noticeId}
+    </delete>
+    <update id="updateCnt">
+        UPDATE portal.portal_notice_tb
+           SET notice_cnt = notice_cnt + 1
+         WHERE notice_oid = #{noticeOid}
+    </update>
+</mapper>

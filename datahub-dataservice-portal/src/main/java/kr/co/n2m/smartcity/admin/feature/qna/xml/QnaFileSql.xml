@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.qna.mapper.QnaFileMapper">
+	<insert id="insertQnaFile" parameterType="srchQnaFileVo">
+		INSERT INTO portal.portal_qnafile_tb
+		(
+		       qnafile_org_nm
+		     , qnafile_save_nm
+		     , qnafile_save_path
+		     , qnafile_size
+		     , qna_oid
+		)
+		VALUES
+		(
+               #{qnafileOrgNm}
+             , #{qnafileSaveNm}
+             , #{qnafileSavePath}
+             , #{qnafileSize}
+             , #{qnaOid}
+		)
+	</insert>
+	
+    <select id="selectQnaFileList" parameterType="long" resultType="qnaFileVo">
+        SELECT qnafile_oid
+             , qnafile_org_nm
+             , qnafile_save_nm
+             , qnafile_save_path
+             , qnafile_size
+             , qna_oid
+          FROM portal.portal_qnafile_tb
+         WHERE qna_oid = #{qnaOid}
+    </select>
+    
+    <select id="selectQnaFile" parameterType="long" resultType="qnaFileVo">
+        SELECT qnafile_oid
+             , qnafile_org_nm
+             , qnafile_save_nm
+             , qnafile_save_path
+             , qnafile_size
+             , qna_oid
+          FROM portal.portal_qnafile_tb
+         WHERE qnafile_oid = #{qnaFileOid}
+    </select>
+    <delete id="deleteQnaFile" parameterType="long">
+        DELETE FROM portal.portal_qnafile_tb
+         WHERE qnafile_oid = #{qnafileOid}
+    </delete>
+</mapper>

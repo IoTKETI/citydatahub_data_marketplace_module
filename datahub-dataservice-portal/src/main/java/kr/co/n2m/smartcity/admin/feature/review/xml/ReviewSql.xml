@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.review.mapper.ReviewMapper">
+	<sql id="limitPage">
+		OFFSET #{startIndex} LIMIT #{pageListSize}
+	</sql>
+    <sql id="whereByReview">
+        WHERE 1=1
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+             <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'title')">
+                 AND r.review_title LIKE CONCAT('%', #{schValue}, '%')
+             </if>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND r.review_cre_dt >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND r.review_cre_dt <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+    </sql>
+    <sql id="orderByReview">
+        ORDER BY r.review_oid DESC
+    </sql>
+	<select id="selectReviewCount" resultType="int">
+		SELECT count(*)
+		  FROM portal.portal_review_tb r
+	  <include refid="whereByReview"/>
+	</select>
+	<select id="selectReviewList" resultType="reviewVo">
+		SELECT r.review_oid
+		     , r.review_title
+		     , r.review_desc
+		     , r.review_purpose
+		     , r.review_developer_id
+		     , r.review_open_dt
+		     , r.review_dev_type
+		     , r.review_cre_dt
+		     , r.review_developer_type
+		     , r.review_developer_loc
+		     , r.review_src
+		     , r2.reviewfile_oid
+          FROM portal.portal_review_tb r
+          LEFT JOIN (SELECT * FROM portal.portal_reviewfile_tb WHERE reviewfile_flag = 'image') r2 ON (r.review_oid = r2.review_oid)
+        <include refid="whereByReview"/>
+        <include refid="orderByReview" />
+		<include refid="limitPage" />
+	</select>
+	<insert id="insertReview" parameterType="srchReviewVo" useGeneratedKeys="true" keyProperty="reviewOid">
+		INSERT INTO portal.portal_review_tb
+		(
+		       review_oid
+		     , review_title
+		     , review_desc
+		     , review_purpose
+		     , review_developer_id
+		     , review_open_dt
+		     , review_dev_type
+		     , review_cre_dt
+		     , review_developer_type
+		     , review_developer_loc
+		     , review_src
+		     , review_cre_usr_id
+		)
+		VALUES
+		(
+			   #{reviewOid}
+             , #{reviewTitle}
+             , #{reviewDesc}
+             , #{reviewPurpose}
+             , #{reviewDeveloperId}
+             <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(reviewOpenDt)">
+             , TO_TIMESTAMP(#{reviewOpenDt}, 'YYYY-MM-DD HH24:MI:SS')
+             </if>
+             <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(reviewOpenDt)">
+             , TO_TIMESTAMP(null, 'YYYY-MM-DD HH24:MI:SS')
+             </if>
+             , #{reviewDevType}
+             , current_timestamp
+             , #{reviewDeveloperType}
+             , #{reviewDeveloperLoc}
+             , #{reviewSrc}
+             , #{reviewCreUsrId}
+		)
+	</insert>
+	<insert id="insertReviewDatasetList" parameterType="srchReviewVo">
+	   INSERT INTO portal.portal_review_datasetmap_tb
+	   (
+	       ds_oid
+	     , review_oid
+	   )
+	   VALUES
+	   <foreach collection="dsOidList" item="dsOid" separator=",">
+	   (
+	       #{dsOid}
+	     , #{reviewOid}
+	   )
+	   </foreach>
+	</insert>
+	<delete id="deleteReviewDatasetList" parameterType="long">
+	   DELETE FROM portal.portal_review_datasetmap_tb
+	   WHERE review_oid = #{reviewOid}
+	</delete>
+    <resultMap type="reviewFileVo" id="reviewFileMap">
+        <id property="reviewfileOid" column="sub_reviewfile_oid"/>
+        <result property="reviewfileFlag" column="sub_reviewfile_flag"/>
+        <result property="reviewfilePscName" column="sub_reviewfile_psc_name"/>
+        <result property="reviewfileLscName" column="sub_reviewfile_lsc_name"/>
+        <result property="reviewfileFilePath" column="sub_reviewfile_file_path"/>
+        <result property="reviewfileFileSize" column="sub_reviewfile_file_size"/>
+    </resultMap>
+    <resultMap type="reviewVo" id="reviewMap">
+        <id property="reviewOid" column="main_review_oid"/>
+        <result property="reviewTitle" column="main_review_title"/>
+        <result property="reviewDesc" column="main_review_desc"/>
+        <result property="reviewPurpose" column="main_review_purpose"/>
+        <result property="reviewDeveloperId" column="main_review_developer_id"/>
+        <result property="reviewOpenDt" column="main_review_open_dt"/>
+        <result property="reviewDevType" column="main_review_dev_type"/>
+        <result property="reviewCreDt" column="main_review_cre_dt"/>
+        <result property="reviewDeveloperType" column="main_review_developer_type"/>
+        <result property="reviewDeveloperLoc" column="main_review_developer_loc"/>
+        <result property="reviewSrc" column="main_review_src"/>
+        <result property="reviewCreUsrId" column="main_review_cre_usr_id"/>
+        <result property="reviewfileOid" column="thumb_file_oid"/>
+        <collection property="fileList" resultMap="reviewFileMap" />
+    </resultMap>
+    <select id="selectReview" resultMap="reviewMap">
+        SELECT r.review_oid                                 AS main_review_oid
+             , r.review_title                               AS main_review_title
+             , r.review_desc                                AS main_review_desc
+             , r.review_purpose                             AS main_review_purpose
+             , r.review_developer_id                        AS main_review_developer_id
+             , r.review_open_dt                             AS main_review_open_dt
+             , r.review_dev_type                            AS main_review_dev_type
+             , r.review_cre_dt                              AS main_review_cre_dt
+             , r.review_developer_type                      AS main_review_developer_type
+             , r.review_developer_loc                       AS main_review_developer_loc
+             , r.review_src                                 AS main_review_src
+             , r.review_cre_usr_id                          AS main_review_cre_usr_id
+             , f.reviewfile_oid                             AS sub_reviewfile_oid
+             , f.reviewfile_flag                            AS sub_reviewfile_flag
+             , f.reviewfile_psc_name                        AS sub_reviewfile_psc_name
+             , f.reviewfile_lsc_name                        AS sub_reviewfile_lsc_name
+             , f.reviewfile_file_path                       AS sub_reviewfile_file_path
+             , f.reviewfile_file_size                       AS sub_reviewfile_file_size
+             , f.review_oid                                 AS sub_review_oid
+             , f2.reviewfile_oid                            AS thumb_file_oid
+          FROM portal.portal_review_tb r
+     LEFT JOIN (SELECT * FROM portal.portal_reviewfile_tb WHERE reviewfile_flag = 'file') f ON (f.review_oid = r.review_oid)
+     LEFT JOIN (SELECT * FROM portal.portal_reviewfile_tb WHERE reviewfile_flag = 'image') f2 ON (f2.review_oid = r.review_oid)
+         WHERE r.review_oid = #{reviewOid}
+    </select>
+    <select id="selectReviewDatasetList" resultType="reviewDatasetVo">
+        SELECT review_oid
+             , ds_oid as devDatasetId
+          FROM portal.portal_review_datasetmap_tb
+         WHERE review_oid = #{reviewOid}
+    </select>
+    <update id="updateReview" parameterType="srchReviewVo">
+        UPDATE portal.portal_review_tb 
+           SET review_title = #{reviewTitle}
+             , review_desc = #{reviewDesc}
+             , review_purpose = #{reviewPurpose}
+             , review_developer_id = #{reviewDeveloperId}
+			 , review_open_dt = TO_TIMESTAMP(#{reviewOpenDt}, 'YYYY-MM-DD HH24:MI:SS')
+			 , review_dev_type = #{reviewDevType}
+			 , review_developer_type = #{reviewDeveloperType}
+			 , review_developer_loc = #{reviewDeveloperLoc}
+			 , review_src = #{reviewSrc}
+			 , review_upt_usr_id = #{reviewUptUsrId}
+			 , review_upt_dt = current_timestamp
+         WHERE review_oid = #{reviewOid}
+    </update>
+    <delete id="deleteReview" parameterType="srchReviewVo">
+        DELETE FROM portal.portal_review_tb WHERE review_oid = #{reviewOid}
+    </delete>
+</mapper>

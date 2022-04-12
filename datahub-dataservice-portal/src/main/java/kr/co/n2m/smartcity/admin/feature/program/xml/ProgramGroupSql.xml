@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.program.mapper.ProgramGroupMapper">
+	<sql id="limitPage">
+		OFFSET #{startIndex} LIMIT #{pageListSize}
+	</sql>
+	<sql id="whereByProgramGroup">
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+		    <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'programGroupNm')">
+		        AND programgroup_nm LIKE CONCAT('%', #{schValue}, '%')
+		    </if>
+		</if>
+	</sql>
+	<sql id="orderByProgramGroup">
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+            <choose>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'programgroupId')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY programgroup_oid DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY programgroup_oid ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY programgroup_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'programgroupNm')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY programgroup_nm DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY programgroup_nm ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY programgroup_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'programgroupDesc')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY programgroup_desc DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY programgroup_desc ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY programgroup_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'programgroupCreDt')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY programgroup_cre_dt DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY programgroup_cre_dt ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY programgroup_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'programgroupUseFl')">
+                    <choose>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+                            ORDER BY programgroup_use_fl DESC
+                        </when>
+                        <when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+                            ORDER BY programgroup_use_fl ASC
+                        </when>
+                        <otherwise>
+                            ORDER BY programgroup_oid DESC
+                        </otherwise>
+                    </choose>
+                </when>
+                <otherwise>
+                    ORDER BY rownum DESC
+                </otherwise>
+            </choose>
+        </if>
+        <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+            ORDER BY programgroup_oid DESC
+        </if>
+    </sql>
+	<select id="selectProgramGroupCount" resultType="int">
+		SELECT count(*) FROM portal.portal_programgroup_tb
+		 WHERE 1=1
+		<include refid="whereByProgramGroup"/>
+	</select>
+	<select id="selectProgramGroupList" resultType="programGroupVo">
+		SELECT ROW_NUMBER() OVER (ORDER BY programgroup_cre_dt DESC, programgroup_oid DESC) AS rownum
+		     , programgroup_oid
+		     , programgroup_id
+			 , programgroup_nm
+			 , programgroup_cre_dt
+			 , programgroup_cre_usr_id
+			 , programgroup_desc
+			 , programgroup_upt_dt
+			 , programgroup_upt_usr_id
+			 , programgroup_use_fl
+		  FROM portal.portal_programgroup_tb
+		 WHERE 1=1
+		  <include refid="whereByProgramGroup"/>
+		  <include refid="orderByProgramGroup"/>
+		  <include refid="limitPage"/>
+	</select>
+	<select id="selectProgramGroup" parameterType="long" resultType="programGroupVo">
+		SELECT pg.programgroup_oid
+		     , pg.programgroup_id
+			 , pg.programgroup_nm
+			 , pg.programgroup_cre_dt
+			 , pg.programgroup_cre_usr_id
+			 , pg.programgroup_desc
+			 , pg.programgroup_upt_dt
+			 , pg.programgroup_upt_usr_id
+			 , pg.programgroup_use_fl
+		  FROM portal.portal_programgroup_tb pg
+		 WHERE pg.programgroup_oid = #{programgroupOid}
+	</select>
+	<insert id="insertProgramGroup" parameterType="srchProgramGroupVo">
+		INSERT INTO portal.portal_programgroup_tb
+			 ( 
+			   programgroup_oid
+			 , programgroup_nm
+			 , programgroup_cre_dt
+			 , programgroup_cre_usr_id
+			 , programgroup_desc
+			 , programgroup_use_fl
+			 ) VALUES 
+			 ( 
+			   #{programgroupOid}
+			 , #{programgroupNm}
+			 , current_timestamp
+			 , #{programgroupCreUsrId}
+			 , #{programgroupDesc}
+			 , #{programgroupUseFl}
+			 )
+	</insert>
+	<update id="updateProgramGroup" parameterType="srchProgramGroupVo">
+		UPDATE portal.portal_programgroup_tb 
+		   SET programgroup_nm          = #{programgroupNm}
+			 , programgroup_desc        = #{programgroupDesc}
+			 , programgroup_upt_dt      = current_timestamp
+			 , programgroup_upt_usr_id  = #{programgroupUptUsrId}
+			 , programgroup_use_fl      = #{programgroupUseFl}
+		 WHERE programgroup_oid = #{programgroupOid}
+	</update>
+	<delete id="deleteProgramGroup" parameterType="srchProgramGroupVo">
+		DELETE FROM portal.portal_programgroup_tb WHERE programgroup_oid = #{programgroupOid}
+	</delete>
+	
+	<!--   프로그램 그룹삭제시 하위 프로그램 삭제 -->
+    <delete id="deleteSubProgram" parameterType="srchProgramGroupVo">
+        DELETE FROM portal.portal_program_tb WHERE programgroup_oid = #{programgroupOid}
+    </delete>
+    
+</mapper>

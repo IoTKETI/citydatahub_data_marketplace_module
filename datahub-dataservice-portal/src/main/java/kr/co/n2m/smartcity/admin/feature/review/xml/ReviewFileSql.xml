@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.review.mapper.ReviewFileMapper">
+    <insert id="insertReviewFile" parameterType="srchReviewFileVo">
+        INSERT INTO portal.portal_reviewfile_tb
+        (
+               reviewfile_oid
+             , reviewfile_flag
+             , reviewfile_psc_name
+             , reviewfile_lsc_name
+             , reviewfile_file_path
+             , reviewfile_file_size
+             , review_oid
+        )
+        VALUES
+        (
+               #{reviewfileOid}
+             , #{reviewfileFlag}
+             , #{reviewfilePscName}
+             , #{reviewfileLscName}
+             , #{reviewfileFilePath}
+             , #{reviewfileFileSize}
+             , #{reviewOid}
+        )
+    </insert>
+    <select id="selectReviewFile" parameterType="long" resultType="reviewFileVo">
+        SELECT reviewfile_oid
+             , reviewfile_flag
+             , reviewfile_psc_name
+             , reviewfile_lsc_name
+             , reviewfile_file_path
+             , reviewfile_file_size
+             , review_oid
+          FROM portal.portal_reviewfile_tb
+         WHERE reviewfile_oid = #{reviewfileOid}
+    </select>
+    <select id="selectReviewFileList" parameterType="long" resultType="reviewFileVo">
+        SELECT reviewfile_oid
+             , reviewfile_flag
+             , reviewfile_psc_name
+             , reviewfile_lsc_name
+             , reviewfile_file_path
+             , reviewfile_file_size
+             , review_oid
+          FROM portal.portal_reviewfile_tb
+         WHERE review_oid = #{reviewOid}
+    </select>
+    <delete id="deleteReviewFile" parameterType="long">
+        DELETE FROM portal.portal_reviewfile_tb
+         WHERE reviewfile_oid = #{reviewfileOid}
+    </delete>
+</mapper>

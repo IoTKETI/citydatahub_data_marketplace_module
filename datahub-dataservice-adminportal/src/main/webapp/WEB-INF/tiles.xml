@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<!-- Tiles 매핑 -->       
+<tiles-definitions>
+	<!-- 템플릿 구성 -->
+	<definition name="default" template="/WEB-INF/jsp/layouts/tiles_template.jsp">
+		<put-attribute name="title" value=""/>	
+  		<put-attribute name="header" value="/WEB-INF/jsp/tiles/tiles_header.jsp" />
+  		<put-attribute name="nav" value="/WEB-INF/jsp/tiles/tiles_nav.jsp" />
+  		<put-attribute name="content" value="" />
+  		<put-attribute name="footer" value="/WEB-INF/jsp/tiles/tiles_footer.jsp" />
+  		<put-attribute name="scripts" value="/WEB-INF/jsp/tiles/tiles_scripts.jsp" />
+	</definition>
+	
+	<definition name="login" template="/WEB-INF/jsp/login.jsp"/>
+	
+	<definition name="error/*" template="/WEB-INF/jsp/error/{1}.jsp"/>
+	
+	<!-- 템플릿 상속 받아서 body만 각 페이지별 교환 가능 -->
+	<definition name="*" extends="default">
+		<put-attribute name="content" value="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="*/*" extends="default">
+		<put-attribute name="content" value="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="*/*/*" extends="default">
+		<put-attribute name="content" value="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+</tiles-definitions>

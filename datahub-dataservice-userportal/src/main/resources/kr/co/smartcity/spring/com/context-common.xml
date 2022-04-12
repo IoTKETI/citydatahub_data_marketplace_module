@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xmlns:util="http://www.springframework.org/schema/util"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+				http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+
+    <!-- component-scan 설정-->
+	<context:component-scan base-package="kr.co.smartcity">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+
+	<!-- Global Properties -->
+	<util:properties id="globals" location="classpath:kr/co/smartcity/egovProps/globals.properties"/>
+	<util:properties id="commonGlobals" location="classpath:kr/co/smartcity/egovProps/globals.#{globals['Globals.division']}.properties"/>
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" >
+	    <property name="locations">
+	       <list>
+		       <value>classpath:kr/co/smartcity/egovProps/globals.#{globals['Globals.division']}.properties</value>
+		       <value>classpath:kr/co/smartcity/egovProps/globals.properties</value>
+	       </list>
+	    </property>
+	</bean>
+	
+    <!-- MULTIPART RESOLVERS -->
+    <!-- regular spring resolver -->
+    <bean id="spring.RegularCommonsMultipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="100000000" />
+        <property name="maxInMemorySize" value="100000000" />
+    </bean>
+    <!-- custom multi file resolver -->
+    <bean id="local.MultiCommonsMultipartResolver" class="kr.co.smartcity.user.common.web.EgovMultipartResolver">
+        <property name="maxUploadSize" value="100000000" />
+        <property name="maxInMemorySize" value="100000000" />
+    </bean>
+    <!-- choose one from above and alias it to the name Spring expects -->
+    <alias name="local.MultiCommonsMultipartResolver" alias="multipartResolver" />
+</beans>

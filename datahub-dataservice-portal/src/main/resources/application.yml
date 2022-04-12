@@ -1,0 +1,16 @@
+#common
+
+#server:
+#  port: 7910
+server:
+  port: 7910
+  
+spring:  application:    name: dh-dataservice-portal
+  profiles:
+    include:
+    - env
+    active: dev
+    
+logging:
+  level:
+    kr.co.n2m.smartcity: debug

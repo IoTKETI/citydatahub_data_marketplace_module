@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.faq.mapper.FaqMapper">
+   <sql id="limitPage">
+    OFFSET #{startIndex} LIMIT #{pageListSize}
+  </sql>
+	<sql id="whereByFaq">
+  	WHERE 1=1
+  		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+				AND f.faq_title LIKE CONCAT('%', #{schValue}, '%')
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(fromDate)">
+				<![CDATA[  AND f.faq_cre_dt >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(toDate)">
+				<![CDATA[  AND f.faq_cre_dt <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(totalSch)">
+		        AND (f.faq_title ILIKE CONCAT('%', #{totalSch}, '%')
+		             OR f.faq_question ILIKE CONCAT('%', #{totalSch}, '%')
+		             OR f.faq_answer ILIKE CONCAT('%', #{totalSch}, '%'))
+		</if>
+  	</sql>
+  	<sql id="orderByFaq">
+				<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+			<choose>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'faqId')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY f.faq_oid DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY f.faq_oid ASC
+						</when>
+						<otherwise>
+							ORDER BY f.faq_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'faqTitle')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY f.faq_title DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY f.faq_title ASC
+						</when>
+						<otherwise>
+							ORDER BY f.faq_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'faqCreUsrNm')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY f.faq_cre_usr_id DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY f.faq_cre_usr_id ASC
+						</when>
+						<otherwise>
+							ORDER BY f.faq_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'faqCreDt')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY f.faq_cre_dt DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY f.faq_cre_dt ASC
+						</when>
+						<otherwise>
+							ORDER BY f.faq_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<otherwise>
+					ORDER BY f.faq_oid DESC
+				</otherwise>
+			</choose>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+			ORDER BY f.faq_oid DESC
+		</if>
+	</sql>
+   	<select id="selectFaqCount" resultType="int">
+        SELECT count(*)
+          FROM portal.portal_faq_tb f
+          <include refid="whereByFaq"/>
+	</select>
+	<select id="selectFaqList" resultType="faqVo">
+        SELECT f.faq_id,
+		        f.faq_oid,
+		        f.faq_cnt,
+		        f.faq_title,
+		        f.faq_cre_dt,
+		        f.faq_upt_dt,
+		        f.faq_answer,
+		        f.faq_question,
+		        f.faq_cre_usr_id,
+		        f.faq_upt_usr_id
+        FROM portal.portal_faq_tb f
+          <include refid="whereByFaq"/>
+		  <include refid="orderByFaq"/>
+		  <include refid="limitPage"/>
+	</select>
+	<select id="selectFaqListMain" resultType="faqVo">
+        SELECT f.faq_id,
+        f.faq_oid,
+        f.faq_title,
+        f.faq_cre_dt,
+        f.faq_answer,
+        f.faq_question
+        FROM portal.portal_faq_tb f
+        ORDER BY f.faq_oid DESC
+        LIMIT 7
+	</select>
+	<insert id="insertFaq" parameterType="srchFaqVo" useGeneratedKeys="true" keyProperty="faqOid">
+	      INSERT INTO portal.portal_faq_tb
+	           (faq_cnt,
+		        faq_title,
+		        faq_answer,
+		        faq_question,
+		        faq_cre_usr_id,
+		        faq_cre_dt,
+		        faq_oid
+	           ) VALUES 
+	           ( #{faqCnt}
+             , #{faqTitle}
+             , #{faqAnswer}
+             , #{faqQuestion}
+             , #{faqCreUsrId}
+             ,current_timestamp
+             ,#{faqOid}
+	           )
+	</insert>
+	<resultMap type="faqFileVo" id="faqFileMap">
+        <id property="faqfileOid" column="sub_faqfile_oid"/>
+        <result property="faqfileOid" column="sub_faqfile_oid"/>
+        <result property="faqfileId" column="sub_faqfile_id"/>
+        <result property="faqfileOrgNm" column="sub_faqfile_org_nm"/>
+        <result property="faqfileSavedNm" column="sub_faqfile_saved_nm"/>
+        <result property="faqfileSavePath" column="sub_faqfile_save_path"/>
+        <result property="faqfileSizeByte" column="sub_faqfile_size_byte"/>
+    </resultMap>
+    <resultMap type="faqVo" id="faqMap">
+        <id property="faqOid" column="main_faq_oid"/>
+        <result property="faqCreUsrNm" column="main_faq_cre_usr_nm"/>
+        <result property="faqId" column="main_faq_id"/>
+        <result property="faqCnt" column="main_faq_cnt"/>
+        <result property="faqTitle" column="main_faq_title"/>
+        <result property="faqCreDt" column="main_faq_cre_dt"/>
+        <result property="faqUptDt" column="main_faq_upt_dt"/>
+        <result property="faqAnswer" column="main_faq_answer"/>
+        <result property="faqQuestion" column="main_faq_question"/>
+        <result property="faqCreUsrId" column="main_faq_cre_usr_id"/>
+        <result property="faqUptUsrId" column="main_faq_upt_usr_id"/>
+        <collection property="fileList" resultMap="faqFileMap" />
+    </resultMap>
+	<select id="selectFaq" resultMap="faqMap">
+		SELECT f.faq_oid 					AS main_faq_oid
+			 , f.faq_id 					AS main_faq_id
+			 , f.faq_cnt 					AS main_faq_cnt
+			 , f.faq_title 					AS main_faq_title
+			 , f.faq_cre_dt 				AS main_faq_cre_dt
+			 , f.faq_upt_dt 				AS main_faq_upt_dt
+			 , f.faq_answer 				AS main_faq_answer
+			 , f.faq_question 				AS main_faq_question
+			 , f.faq_cre_usr_id 			AS main_faq_cre_usr_id
+			 , f.faq_upt_usr_id 			AS main_faq_upt_usr_id
+			 , f2.faqfile_oid               AS sub_faqfile_oid      
+			 , f2.faqfile_id                AS sub_faqfile_id      
+             , f2.faqfile_org_nm            AS sub_faqfile_org_nm   
+             , f2.faqfile_saved_nm          AS sub_faqfile_saved_nm 
+             , f2.faqfile_save_path         AS sub_faqfile_save_path
+             , f2.faqfile_size_byte         AS sub_faqfile_size_byte
+		FROM portal.portal_faq_tb f
+        LEFT JOIN portal.portal_faqfile_tb f2
+            	ON (f2.faq_oid = f.faq_oid)
+		WHERE f.faq_oid = #{faqOid}
+	</select>
+	<update id="updateFaq" parameterType="srchFaqVo">
+		UPDATE portal.portal_faq_tb 
+			SET faq_title = #{faqTitle}
+			 , faq_upt_dt = current_timestamp
+			 , faq_answer = #{faqAnswer}
+			 , faq_question = #{faqQuestion}
+			 , faq_upt_usr_id = #{faqUptUsrId}
+		 WHERE faq_oid = #{faqOid}
+	</update>
+	<update id="updateFaqCnt" parameterType="srchFaqVo">
+		 UPDATE portal.portal_faq_tb 
+			SET faq_cnt = faq_cnt +1
+		 WHERE faq_oid = #{faqOid};
+	</update>
+	<delete id="deleteFaq" parameterType="srchFaqVo">
+		DELETE FROM portal.portal_faq_tb WHERE faq_oid = #{faqOid}
+	</delete>
+</mapper>

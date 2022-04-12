@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.notice.mapper.NoticeFileMapper">
+    <select id="selectNoticeFile" parameterType="long" resultType="noticeFileVo">
+        SELECT noticefile_oid
+             , noticefile_org_nm
+             ,  noticefile_saved_nm
+             ,  noticefile_save_path
+             ,  noticefile_size_byte
+             ,  notice_oid
+          FROM portal.portal_noticefile_tb
+         WHERE noticefile_oid = #{noticefileOid}
+    </select>
+    <select id="selectNoticeFileList" parameterType="long" resultType="noticeFileVo">
+        SELECT noticefile_oid
+             , noticefile_org_nm
+             ,  noticefile_saved_nm
+             ,  noticefile_save_path
+             ,  noticefile_size_byte
+             ,  notice_oid
+          FROM portal.portal_noticefile_tb
+         WHERE noticeOid = #{noticeOid}
+    </select>
+    <insert id="insertNoticeFile" parameterType="srchNoticeFileVo">
+        INSERT INTO portal.portal_noticefile_tb
+             (
+                 noticefile_oid
+               , noticefile_org_nm
+               , noticefile_saved_nm
+               , noticefile_save_path
+               , noticefile_size_byte
+               , notice_oid
+             )
+        VALUES
+             (
+                 #{noticefileOid}
+               , #{noticefileOrgNm}
+               , #{noticefileSavedNm}
+               , #{noticefileSavePath}
+               , #{noticefileSizeByte}
+               , #{noticeOid}
+             )
+    </insert>
+    <delete id="deleteNoticeFile" parameterType="long">
+        DELETE FROM portal.portal_noticefile_tb
+         WHERE noticefile_oid = #{noticefileOid}
+    </delete>
+</mapper>

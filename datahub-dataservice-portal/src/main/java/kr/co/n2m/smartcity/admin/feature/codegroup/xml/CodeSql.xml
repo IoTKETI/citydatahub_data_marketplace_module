@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.codegroup.mapper.CodeMapper">
+	<sql id="limitPage">
+		OFFSET #{startIndex} LIMIT #{pageListSize}
+	</sql>
+	<sql id="whereByCode">
+		WHERE 1=1
+		  AND codegroup_id = #{codeGroupId}
+	</sql>
+	<sql id="orderByCode">
+		ORDER BY code_sort ASC, code_cre_dt DESC
+	</sql>
+	<select id="selectCodeCount" resultType="int">
+		SELECT count(*) FROM portal.portal_code_tb
+		<include refid="whereByCode"/>
+	</select>
+	<select id="selectCodeList" resultType="codeVo">
+		SELECT code_id
+			 , code_name
+			 , code_use_fl
+			 , code_sort
+			 , code_desc
+			 , code_cre_usr_id
+			 , code_cre_dt
+			 , code_upt_usr_id
+			 , code_upt_dt
+		  FROM portal.portal_code_tb
+		  <include refid="whereByCode"/>
+		  <include refid="orderByCode"/>
+		  <include refid="limitPage"/>
+	</select>
+	<select id="selectCode" parameterType="String" resultType="codeVo">
+		SELECT code_id
+			 , code_name
+			 , code_use_fl
+			 , code_sort
+			 , code_desc
+			 , code_cre_usr_id
+			 , code_cre_dt
+			 , code_upt_usr_id
+			 , code_upt_dt
+		  FROM portal.portal_code_tb
+		 WHERE codegroup_id = #{codeGroupId}
+		   AND code_id = #{codeId}
+	</select>
+	
+	<insert id="insertCode" parameterType="srchCodeVo">
+		INSERT INTO portal.portal_code_tb
+			 ( code_id
+			 , code_name
+			 , code_use_fl
+			 , code_sort
+			 , code_desc
+			 , code_cre_usr_id
+			 , code_cre_dt
+			 , codegroup_id
+			 ) VALUES 
+			 ( #{codeId}
+			 , #{codeName}
+			 , #{codeUseFl}
+			 , #{codeSort}
+			 , #{codeDesc}
+			 , #{codeCreUsrId}
+			 , current_timestamp
+			 , #{codeGroupId}
+			 )
+	</insert>
+	<update id="updateCode" parameterType="srchCodeVo">
+		UPDATE portal.portal_code_tb 
+		   SET code_name       = #{codeName}
+			 , code_use_fl     = #{codeUseFl}
+			 , code_sort       = #{codeSort}
+			 , code_desc       = #{codeDesc}
+			 , code_upt_usr_id = #{codeUptUsrId}
+			 , code_upt_dt     = current_timestamp
+		 WHERE codegroup_id    = #{codeGroupId}
+		   AND code_id         = #{codeId}
+	</update>
+	<select id="selectCodeCountById" resultType="int">
+		SELECT COUNT(*) FROM portal.portal_code_tb WHERE code_id = #{codeId}
+	</select>
+</mapper>
+

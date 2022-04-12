@@ -1,0 +1,1750 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.datapublish.feature.dataset.mapper.DatasetMapper">
+    <sql id="limitPage">
+    	<if test="paging">
+        	OFFSET #{startIndex} LIMIT #{pageListSize}
+        </if>
+    </sql>
+    
+    <select id="selectSimpleDataset" resultType="SimpleDatasetVo">
+        SELECT /*+ SQL_COMMENT: 데이터 Polling 시 필요한 기본 데이터셋 정보 조회*/
+               t1.ds_oid               AS ds_oid   
+             , t1.ds_title             AS ds_title 
+             , t1.ds_status            AS ds_status
+             , t1.ds_category_oid      AS ds_category_oid   
+             , t1.ds_desc              AS ds_desc           
+             , t1.ds_update_cycle      AS ds_update_cycle   
+             , t1.ds_provider          AS ds_provider       
+             , t1.ds_provide_system    AS ds_provide_system 
+             , t1.ds_offer_type        AS ds_offer_type
+             , t1.ds_keyword           AS ds_keyword        
+             , t1.ds_license           AS ds_license        
+             , t1.ds_constraints       AS ds_constraints    
+             , t1.ds_extension         AS ds_extension      
+             , t1.ds_data_type         AS ds_data_type
+             , t1.ds_ownership         AS ds_ownership      
+             , t1.ds_provider_id       AS ds_provider_id 
+             , t1.ds_create_user_id    AS ds_create_user_id 
+             , t1.ds_created           AS ds_created        
+             , t1.ds_update_user_id    AS ds_update_user_id 
+             , t1.ds_updated           AS ds_updated        
+             , t1.ds_hits              AS ds_hits           
+             , ds_model_type           AS ds_model_id     
+             , ds_model_namespace      AS ds_model_name
+          FROM data_publish.dh_dataset t1
+         WHERE t1.ds_oid = #{datasetId}
+    </select>
+    
+    
+    <sql id="whereByDataset">
+        WHERE 1=1
+          <if test="categoryOidList != null and categoryOidList.size != 0">
+            AND t1.ds_category_oid IN(
+          		WITH RECURSIVE new_category_tb(category_oid, path, cycle) AS (
+					SELECT pct.category_oid
+					     , array[category_oid]
+					     , false
+					  FROM data_publish.portal_category_tb pct 
+					 WHERE pct.category_parent_oid = 0
+					 UNION ALL
+					SELECT pct.category_oid
+					     , new_pct.path || pct.category_oid
+					     , pct.category_oid = ANY(path)
+					  FROM data_publish.portal_category_tb pct
+					     , new_category_tb new_pct
+					 WHERE pct.category_parent_oid = new_pct.category_oid
+					   AND not cycle
+				) SELECT category_oid FROM new_category_tb WHERE
+	          	<foreach collection="categoryOidList" item="categoryOid" separator="OR">
+					#{categoryOid} = any(path)
+	          	</foreach>
+	        )
+          </if>
+	      <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchTitle)">
+	          AND t1.ds_title LIKE CONCAT('%', #{searchTitle}, '%')
+	      </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@notEquals(searchType, 'mypage')">
+	          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchStatus)">
+	               <choose>
+	                   <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchStatus, 'request_all')">
+	                       AND t1.ds_status IN('releaseRequest', 'paidRequest')
+	                   </when>
+	                   <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchStatus, 'release_all')">
+	                       AND t1.ds_status IN('prodMode', 'paidMode')
+	                   </when>
+	                   <otherwise>
+	                       AND t1.ds_status = #{searchStatus}
+	                   </otherwise>
+	               </choose>
+              </if>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchType, 'mypage')">
+	          AND t1.ds_create_user_id = #{loginUserId}
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchType, 'status')">
+	          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchStatus)">
+	               <choose>
+	                   <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchStatus, 'request_all')">
+	                       AND t1.ds_status IN('releaseRequest', 'paidRequest')
+	                   </when>
+	                   <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchStatus, 'release_all')">
+	                       AND t1.ds_status IN('prodMode', 'paidMode')
+	                   </when>
+	               </choose>
+              </if>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(dataOfferType)">
+          AND t1.ds_offer_type = #{dataOfferType}
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND t1.ds_created >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND t1.ds_created <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+    </sql>
+    <sql id="orderByDataset">
+        ORDER BY t1.ds_created DESC
+    </sql>
+    <select id="selectDatasetCount" parameterType="SrchDatasetVo" resultType="int">
+        SELECT COUNT(*) FROM data_publish.dh_dataset t1
+        <include refid="whereByDataset"/>
+    </select>
+    <select id="selectDatasetList" parameterType="SrchDatasetVo" resultType="DatasetVo">
+        SELECT t1.ds_oid                 AS id
+             , t1.ds_title               AS title
+             , t1.ds_status              AS status
+             , t2.code_name              AS statusName
+             , t1.ds_category_oid        AS categoryId
+             , t3.category_nm            AS categoryName
+             , t1.ds_desc                AS description
+             , t1.ds_update_cycle        AS updatePeriod
+             , t1.ds_provider            AS provider
+             , t1.ds_provide_system      AS providerSystem
+             , t1.ds_offer_type          AS dataOfferType
+             , t4.code_name              AS dataOfferTypeName
+             , t1.ds_keyword             AS keywords
+             , t1.ds_license             AS license
+             , t7.code_name              AS licenseName
+             , t1.ds_constraints         AS constraints
+             , t1.ds_extension           AS extension
+             , t5.code_name              AS extensionName
+             , t1.ds_data_type           AS dataType
+             , t6.code_name              AS dataTypeName
+             , t1.ds_ownership           AS ownership
+             , t1.ds_provider_id         AS providerId
+             , t1.ds_create_user_id      AS creatorId
+             , t1.ds_created             AS createdAt
+             , t1.ds_update_user_id      AS modifierId
+             , t1.ds_updated             AS modifiedAt
+             , t1.ds_hits                AS retrievalCount
+             , t1.ds_search_type         AS searchType
+             , t1.ds_model_type          AS modelId
+             , t1.ds_model_namespace     AS modelName
+          FROM data_publish.dh_dataset t1
+         LEFT JOIN data_publish.portal_code_tb     t2 ON (t1.ds_status       = t2.code_id)
+         LEFT JOIN ( WITH RECURSIVE new_category_tb(category_oid, path, category_nm_arr, cycle) AS (
+			SELECT category_oid
+				 , array[category_oid]
+			     , array[category_nm]::varchar(60)[]
+			     , false
+			  FROM data_publish.portal_category_tb pct 
+			 WHERE pct.category_parent_oid = 0
+			 UNION ALL
+			SELECT pct.category_oid
+				 , path || pct.category_oid
+			     , (category_nm_arr || pct.category_nm)::varchar(60)[]
+			     , pct.category_oid = any(path)
+			  FROM data_publish.portal_category_tb pct
+			     , new_category_tb new_pct
+			 WHERE pct.category_parent_oid = new_pct.category_oid 
+			   and not cycle
+		 ) SELECT category_oid, array_to_string(category_nm_arr, ' > ') AS category_nm FROM new_category_tb) t3 ON (t1.ds_category_oid = t3.category_oid)
+         LEFT JOIN data_publish.portal_code_tb     t4 ON (t1.ds_offer_type   = t4.code_id AND t4.codegroup_id = 'CG_00020')
+         LEFT JOIN data_publish.portal_code_tb     t5 ON (t1.ds_extension    = t5.code_id)
+         LEFT JOIN data_publish.portal_code_tb     t6 ON (t1.ds_data_type    = t6.code_id)
+         LEFT JOIN data_publish.portal_code_tb     t7 ON (t1.ds_license      = t7.code_id)
+          <include refid="whereByDataset"/>
+          <include refid="orderByDataset"/>
+          <include refid="limitPage"/>
+    </select>
+    
+    <select id="selectDataset" parameterType="SrchDatasetVo" resultType="DatasetVo">
+        SELECT t1.ds_oid                 AS id
+             , t1.ds_title               AS title
+             , t1.ds_status              AS status
+             , t2.code_name              AS statusName
+             , t1.ds_category_oid        AS categoryId
+             , t3.category_nm            AS categoryName
+             , t1.ds_desc                AS description
+             , t1.ds_update_cycle        AS updatePeriod
+             , t1.ds_provider            AS provider
+             , t1.ds_provide_system      AS providerSystem
+             , t1.ds_offer_type          AS dataOfferType
+             , t4.code_name              AS dataOfferTypeName
+             , t1.ds_keyword             AS keywords
+             , t1.ds_license             AS license
+             , t7.code_name              AS licenseName
+             , t1.ds_constraints         AS constraints
+             , t1.ds_extension           AS extension
+             , t5.code_name              AS extensionName
+             , t1.ds_data_type           AS dataType
+             , t6.code_name              AS dataTypeName
+             , t1.ds_ownership           AS ownership
+             , t1.ds_provider_id         AS providerId
+             , t1.ds_create_user_id      AS creatorId
+             , t1.ds_created             AS createdAt
+             , t1.ds_update_user_id      AS modifierId
+             , t1.ds_updated             AS modifiedAt
+             , t1.ds_hits                AS retrievalCount
+             , t1.ds_search_type         AS searchType
+             , t1.ds_model_type          AS modelId
+             , t1.ds_model_namespace     AS modelName
+          FROM data_publish.dh_dataset    t1
+     LEFT JOIN data_publish.portal_code_tb     t2 ON (t1.ds_status       = t2.code_id)
+     LEFT JOIN ( WITH RECURSIVE new_category_tb(category_oid, path, category_nm_arr, cycle) AS (
+		SELECT category_oid
+			 , array[category_oid]
+		     , array[category_nm]::varchar(60)[]
+		     , false
+		  FROM data_publish.portal_category_tb pct 
+		 WHERE pct.category_parent_oid = 0
+		 UNION ALL
+		SELECT pct.category_oid
+			 , path || pct.category_oid
+		     , (category_nm_arr || pct.category_nm)::varchar(60)[]
+		     , pct.category_oid = any(path)
+		  FROM data_publish.portal_category_tb pct
+		     , new_category_tb new_pct
+		 WHERE pct.category_parent_oid = new_pct.category_oid 
+		   and not cycle
+	 ) SELECT  category_oid, array_to_string(category_nm_arr, ' > ') AS category_nm FROM new_category_tb) t3 ON (t1.ds_category_oid = t3.category_oid)
+     LEFT JOIN data_publish.portal_code_tb     t4 ON (t1.ds_offer_type   = t4.code_id AND t4.codegroup_id = 'CG_00020')
+     LEFT JOIN data_publish.portal_code_tb     t5 ON (t1.ds_extension    = t5.code_id)
+     LEFT JOIN data_publish.portal_code_tb     t6 ON (t1.ds_data_type    = t6.code_id)
+     LEFT JOIN data_publish.portal_code_tb     t7 ON (t1.ds_license      = t7.code_id)
+         WHERE t1.ds_oid = #{id}
+    </select>
+    
+    <update id="updateDatasetHit" parameterType="hashmap" >
+       <selectKey keyProperty="retrievalCount" resultType="int" order="BEFORE" >
+           SELECT COALESCE(null, MAX(ds_hits), 0) + 1 FROM data_publish.dh_dataset WHERE ds_oid = #{datasetId}
+       </selectKey>
+       UPDATE data_publish.dh_dataset
+          SET ds_hits = #{retrievalCount}
+        WHERE ds_oid = #{datasetId}
+    </update>
+    
+	<sql id="whereByDatasetUsage">
+		WHERE 1=1
+	 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(loginUserId)">
+			AND t1.req_user_id = #{loginUserId}
+		</if>
+	 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(datasetId)">
+	 		AND t1.ds_oid = #{datasetId}
+	 	</if>
+	 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(schCondition, 'paidMode')">
+	 		AND EXISTS(select 1 from data_publish.dh_dataset_userequest_pay where req_id = t1.req_oid and pay_status = 'pay_complete')
+	 	</if>
+	 	
+	</sql>
+	
+	<sql id="orderByDatasetUsage">
+	</sql>
+	
+    <select id="selectDatasetUsageCount" parameterType="SrchDatasetUseRequestVo" resultType="int">
+       SELECT COUNT(*)
+         FROM data_publish.dh_dataset_userequest t1
+        <include refid="whereByDatasetUsage"/>
+    </select>
+    
+    <select id="selectDatasetSubscriptionCount" parameterType="SrchDatasetUseRequestVo" resultType="int">
+       SELECT COUNT(*)
+         FROM data_publish.dh_dataset_subscription t1
+         WHERE t1.ds_oid 			= 	#{datasetId} 
+    </select>
+    
+    <select id="selectDatasetSubscriptionDbCount" parameterType="SrchDatasetUseRequestVo" resultType="int">
+       SELECT COUNT(*)
+         FROM data_publish.dh_dataset_userequest t1
+         WHERE t1.ds_oid 			= 	#{datasetId} 
+    </select>
+    
+    <select id="selectSubscriptionId" parameterType="SrchDatasetUseRequestVo" resultType="String">
+       SELECT subscription_id as subscriptionId
+         FROM data_publish.dh_dataset_subscription t1
+         WHERE t1.ds_oid 			=	 #{datasetId}
+    </select>
+    
+    <select id="selectDatasetSubscriptionType" parameterType="SrchDatasetUseRequestVo" resultType="String">
+       SELECT    ds_model_namespace as type
+ 		FROM data_publish.dh_dataset t1
+        WHERE t1.ds_oid = #{datasetId}
+    </select>
+    
+    <select id="selectDatasetSubscriptionId" parameterType="SrchDatasetUseRequestVo" resultType="DatasetUseRequestVo">
+       SELECT 	instance_id AS ids 
+       	FROM data_publish.dh_dataset_instance_info t1
+       	WHERE t1.ds_oid = #{datasetId}
+    </select>
+    
+	<select id="selectDatasetUsageList" parameterType="SrchDatasetUseRequestVo" resultType="DatasetUseRequestVo">
+		SELECT t1.req_oid               AS id
+			 , t1.ds_oid                AS datasetId
+			 , t1.push_uri              AS notificationUrl
+         	 , t1.req_user_id           AS userId
+    		 , t1.req_created           AS createdAt
+		  FROM data_publish.dh_dataset_userequest t1
+		  <include refid="whereByDatasetUsage"/>
+          <include refid="orderByDatasetUsage"/>
+      	  <include refid="limitPage"/>
+	</select>
+    <select id="selectDatasetUsage" parameterType="hashmap" resultType="DatasetUseRequestVo">
+        SELECT t1.req_oid             AS id
+             , t1.ds_oid              AS datasetId
+             , t1.push_uri            AS notificationUrl
+             , t1.req_user_id         AS userId
+             , t1.req_created         AS createdAt
+          FROM data_publish.dh_dataset_userequest t1
+         WHERE t1.ds_oid      = #{datasetId}
+           AND t1.req_oid     = #{requestUsageId}
+    </select>
+    
+    <insert id="insertDatasetUsage" parameterType="SrchDatasetUseRequestVo">
+    INSERT INTO data_publish.dh_dataset_userequest
+             ( req_oid
+             , ds_oid
+             , req_user_id
+             , push_uri
+             , req_created
+             ) VALUES
+             ( #{id}
+             , #{datasetId}
+             , #{loginUserId}
+             , #{notificationUrl}
+             , current_timestamp
+             )
+    </insert>
+    
+    <insert id="insertDataseSubScriptiontUsage" parameterType="SrchDatasetUseRequestVo">
+    INSERT INTO data_publish.dh_dataset_subscription
+             ( ds_oid
+             , subscription_id
+             ) VALUES
+             ( #{datasetId}
+             , #{subscriptionId}
+             )
+    </insert>
+    
+    <delete id="deleteDataseSubScriptiontUsage" parameterType="SrchDatasetUseRequestVo">
+        DELETE FROM data_publish.dh_dataset_subscription WHERE ds_oid = #{datasetId}
+    </delete>
+	
+	<update id="updateDatasetUsage" parameterType="SrchDatasetUseRequestVo">
+		UPDATE data_publish.dh_dataset_userequest
+		   SET push_uri             = #{notificationUrl}
+		 WHERE ds_oid               = #{datasetId}
+		   AND req_oid              = #{id}
+	</update>
+	
+	<update id="updateDatasetUsagePart" parameterType="SrchDatasetUseRequestVo">
+		UPDATE data_publish.dh_dataset_userequest
+		 <set>
+		 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(notificationUrl)">
+		 		push_uri             = #{notificationUrl},
+		 	</if>
+		 	req_created = current_timestamp,
+		 </set>
+		 WHERE ds_oid           = #{datasetId}
+		   AND req_oid          = #{id}
+	</update>
+    
+    <delete id="deleteDatasetUsage" parameterType="SrchDatasetUseRequestVo">
+        DELETE FROM data_publish.dh_dataset_userequest WHERE ds_oid = #{datasetId} AND req_oid = #{id}
+    </delete>
+	
+    <select id="selectDatasetOutputList" parameterType="SrchDatasetOutputVo" resultType="DatasetOutputVo">
+        SELECT output_oid           AS id
+             , ds_oid               AS datasetId
+             , real_col_name        AS realColumnName
+             , alias_col_name       AS aliasColumnName
+             , output_desc          AS description
+             , open              AS open
+          FROM data_publish.dh_dataset_output_info
+         WHERE ds_oid   = #{datasetId}
+    </select>
+    
+    <select id="selectDatasetOutput" parameterType="hashmap" resultType="DatasetOutputVo">
+        SELECT output_oid           AS id
+             , ds_oid               AS datasetId
+             , real_col_name        AS realColumnName
+             , alias_col_name       AS aliasColumnName
+             , output_desc          AS description
+             , open              AS open
+          FROM data_publish.dh_dataset_output_info
+         WHERE ds_oid     = #{datasetId}
+           AND output_oid = #{columnId}
+    </select>
+    
+    <insert id="insertDatasetOutput" parameterType="SrchDatasetOutputVo">
+        INSERT INTO data_publish.dh_dataset_output_info
+                 ( output_oid
+                 , ds_oid
+                 , real_col_name
+                 , alias_col_name
+                 , output_desc
+                 , open
+                 ) VALUES
+                 ( CAST(#{id} AS BIGINT)
+                 , #{datasetId}
+                 , #{realColumnName}
+                 , #{aliasColumnName}
+                 , #{description}
+                 , #{open})
+    </insert>
+    
+    <update id="updateDatasetOutput" parameterType="SrchDatasetOutputVo">
+		UPDATE data_publish.dh_dataset_output_info
+		   SET real_col_name     = #{realColumnName}
+			 , alias_col_name    = #{aliasColumnName}
+			 , output_desc       = #{description}
+			 , open           = #{open}
+		 WHERE output_oid        = #{id}
+		   AND ds_oid            = #{datasetId}
+	</update>
+	<update id="updateDatasetOutputPart" parameterType="SrchDatasetOutputVo">
+		UPDATE data_publish.dh_dataset_output_info
+		 <set>
+		 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(realColumnName)">
+		 		real_col_name     = #{realColumnName},
+		 	</if>
+		 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(aliasColumnName)">
+		 		alias_col_name    = #{aliasColumnName},
+		 	</if>
+		 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(description)">
+		 		output_desc       = #{description},
+		 	</if>
+		 	<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(open)">
+		 		open           = #{open},
+		 	</if>
+		 </set>
+		 WHERE output_oid        = #{id}
+		   AND ds_oid            = #{datasetId}
+	</update>
+    
+    <delete id="deleteDatasetOutput" parameterType="SrchDatasetOutputVo">
+        DELETE FROM data_publish.dh_dataset_output_info WHERE output_oid = #{id} AND ds_oid = #{datasetId}
+    </delete>
+    
+    <select id="selectDatasetInstanceList" resultType="DatasetInstanceVo">
+        SELECT dii_id         AS id
+             , ds_oid         AS datasetId
+             , instance_id    AS instanceId
+          FROM data_publish.dh_dataset_instance_info
+         WHERE ds_oid = #{datasetId}
+    </select>
+    
+    <insert id="insertDatasetInstance" parameterType="SrchDatasetInstanceVo">
+        INSERT INTO data_publish.dh_dataset_instance_info
+                 ( dii_id
+                 , ds_oid
+                 , instance_id
+                 ) VALUES
+                 ( CAST(#{id} AS BIGINT)
+                 , #{datasetId}
+                 , #{instanceId})
+    </insert>
+    
+    <delete id="deleteDatasetInstance" parameterType="SrchDatasetInstanceVo">
+        DELETE FROM data_publish.dh_dataset_instance_info WHERE ds_oid = #{datasetId} AND dii_id = #{id}
+    </delete>
+    
+    
+    <select id="selectDatasetSearchInfoList" parameterType="SrchDatasetSearchInfoVo" resultType="DatasetSearchInfoVo">
+        SELECT t1.si_oid               AS id
+             , t1.ds_oid               AS datasetId
+             , t1.si_main_attr         AS mainAttribute
+             , t1.si_sub_attr          AS subAttribute
+             , t1.si_condition_cd      AS symbol
+             , t2.code_name            AS symbolName
+             , t1.si_search_value      AS value
+         FROM data_publish.dh_dataset_search_inf_tb t1
+    LEFT JOIN data_publish.portal_code_tb           t2 ON (t1.si_condition_cd = t2.code_id)
+        WHERE t1.ds_oid = #{datasetId}
+    </select>
+    <select id="selectDatasetSearchInfo" parameterType="SrchDatasetSearchInfoVo" resultType="DatasetSearchInfoVo">
+        SELECT t1.si_oid               AS id
+             , t1.ds_oid               AS datasetId
+             , t1.si_main_attr         AS mainAttribute
+             , t1.si_sub_attr          AS subAttribute
+             , t1.si_condition_cd      AS symbol
+             , t2.code_name            AS symbolName
+             , t1.si_search_value      AS value
+         FROM data_publish.dh_dataset_search_inf_tb t1
+    LEFT JOIN data_publish.portal_code_tb           t2 ON (t1.si_condition_cd = t2.code_id)
+        WHERE t1.si_oid = #{id}
+          AND t1.ds_oid = #{datasetId}
+    </select>
+    
+    <insert id="insertDatasetSearchInfo" parameterType="SrchDatasetSearchInfoVo">
+    INSERT INTO data_publish.dh_dataset_search_inf_tb
+             ( si_oid
+             , ds_oid
+             , si_main_attr
+             , si_sub_attr
+             , si_condition_cd
+             , si_search_value
+             ) VALUES
+             ( CAST(#{id} AS BIGINT)
+             , #{datasetId}
+             , #{mainAttribute}
+             , #{subAttribute}
+             , #{symbol}
+             , #{value} )
+    </insert>
+    
+    <update id="updateDatasetSearchInfo" parameterType="SrchDatasetSearchInfoVo">
+        UPDATE data_publish.dh_dataset_search_inf_tb 
+		   SET si_main_attr    = #{mainAttribute}
+		     , si_sub_attr     = #{subAttribute}
+		     , si_condition_cd = #{symbol}
+		     , si_search_value = #{value}
+		 WHERE si_oid          = #{id}
+		   AND ds_oid          = #{datasetId}
+    </update>
+    
+    <delete id="deleteDatasetSearchInfo" parameterType="SrchDatasetSearchInfoVo">
+        DELETE FROM data_publish.dh_dataset_search_inf_tb WHERE si_oid = #{id} AND ds_oid = #{datasetId}
+    </delete>
+    
+    
+    <select id="selectDatasetFileList" parameterType="SrchDatasetFileVo" resultType="DatasetFileVo">
+        SELECT ds_file_oid              AS id
+             , ds_oid                   AS datasetId
+             , ds_file_flag             AS type
+             , ds_file_psc_name         AS physicalName
+             , ds_file_lsc_name         AS logicalName
+             , ds_file_path             AS path
+             , ds_file_size             AS size
+          FROM data_publish.dh_dataset_file
+         WHERE ds_oid = #{datasetId}
+    </select>
+    
+    <select id="selectDatasetFile" parameterType="SrchDatasetFileVo" resultType="DatasetFileVo">
+        SELECT ds_file_oid              AS id          
+             , ds_oid                   AS datasetId   
+             , ds_file_flag             AS type        
+             , ds_file_psc_name         AS physicalName
+             , ds_file_lsc_name         AS logicalName 
+             , ds_file_path             AS path        
+             , ds_file_size             AS size        
+          FROM data_publish.dh_dataset_file
+         WHERE ds_oid = #{datasetId}
+           AND ds_file_oid = #{id}
+    </select>
+    
+    <insert id="insertDatasetFile" parameterType="SrchDatasetFileVo">
+        INSERT INTO data_publish.dh_dataset_file
+                 ( ds_oid
+                 , ds_file_oid
+                 , ds_file_flag
+                 , ds_file_psc_name
+                 , ds_file_lsc_name
+                 , ds_file_path
+                 , ds_file_size
+                 ) VALUES
+                 ( #{datasetId}
+                 , #{id}
+                 , #{type}
+                 , #{physicalName}
+                 , #{logicalName}
+                 , #{path}
+                 , #{size} )
+    </insert>
+    
+    <delete id="deleteDatasetFile" parameterType="SrchDatasetFileVo">
+        DELETE FROM data_publish.dh_dataset_file 
+         WHERE ds_oid      = #{datasetId} 
+           AND ds_file_oid = #{id, jdbcType=BIGINT}
+    </delete>
+    
+    <insert id="insertDataset" parameterType="SrchDatasetVo">
+         INSERT INTO data_publish.dh_dataset
+             ( ds_oid
+             , ds_title
+             , ds_status
+             , ds_category_oid
+             , ds_desc
+             , ds_update_cycle
+             , ds_provider
+             , ds_provide_system
+             , ds_offer_type
+             , ds_keyword
+             , ds_license
+             , ds_constraints
+             , ds_extension
+             , ds_data_type
+             , ds_ownership
+             , ds_provider_id
+             , ds_create_user_id
+             , ds_created
+             , ds_update_user_id
+             , ds_updated
+             , ds_search_type
+             , ds_model_type
+             , ds_model_namespace
+             ) VALUES
+             ( #{id}
+             , #{title}
+             , #{status}
+             , #{categoryId}
+             , #{description}
+             , #{updatePeriod}
+             , #{provider}
+             , #{providerSystem}
+             , #{dataOfferType}
+             , #{keywords}
+             , #{license}
+             , #{constraints}
+             , #{extension}
+             , #{dataType}
+             , #{ownership}
+             <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isEmpty(providerId)">
+             , #{loginUserId}
+             </if>
+             <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(providerId)">
+             , #{providerId}
+             </if>
+             , #{loginUserId}
+             , current_timestamp
+             , #{loginUserId}
+             , current_timestamp
+             , #{searchType}
+             , #{modelId}
+             , #{modelName}
+             )
+    </insert>
+    
+    <update id="updateDataset" parameterType="SrchDatasetVo">
+        UPDATE data_publish.dh_dataset
+           SET ds_title               = #{title}
+             , ds_status              = #{status}
+             , ds_category_oid        = #{categoryId}
+             , ds_desc                = #{description}
+             , ds_update_cycle        = #{updatePeriod}
+             , ds_provider            = #{provider}
+             , ds_provide_system      = #{providerSystem}
+             , ds_offer_type          = #{dataOfferType}
+             , ds_keyword             = #{keywords}
+             , ds_license             = #{license}
+             , ds_constraints         = #{constraints}
+             , ds_extension           = #{extension}
+             , ds_data_type           = #{dataType}
+             , ds_ownership           = #{ownership}
+             , ds_provider_id         = #{loginUserId}
+             , ds_update_user_id      = #{loginUserId}
+             , ds_updated             = current_timestamp
+             , ds_search_type         = #{searchType}
+             , ds_model_type          = #{modelId}
+             , ds_model_namespace     = #{modelName}
+         WHERE ds_oid                 = #{id}
+    </update>
+    
+    <update id="updateDatasetPart" parameterType="SrchDatasetVo">
+        UPDATE data_publish.dh_dataset
+          <set>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(title)">
+              ds_title               = #{title},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(status)">
+              ds_status              = #{status},
+              </if>
+              <if test="categoryId > 0">
+              ds_category_oid        = #{categoryId},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(description)">
+              ds_desc                = #{description},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(updatePeriod)">
+              ds_update_cycle        = #{updatePeriod},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(provider)">
+              ds_provider            = #{provider},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(providerSystem)">
+              ds_provide_system      = #{providerSystem},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(dataOfferType)">
+              ds_offer_type          = #{dataOfferType},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(keywords)">
+              ds_keyword             = #{keywords},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(license)">
+              ds_license             = #{license},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(constraints)">
+              ds_constraints         = #{constraints},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(extension)">
+              ds_extension           = #{extension},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(dataType)">
+              ds_data_type           = #{dataType},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(ownership)">
+              ds_ownership           = #{ownership},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(providerId)">
+              ds_provider_id         = #{providerId},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchType)">
+              ds_search_type         = #{searchType},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(modelId)">
+              ds_model_type          = #{modelId},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(modelName)">
+              ds_model_namespace     = #{modelName},
+              </if>
+              ds_update_user_id      = #{loginUserId},
+              ds_updated             = current_timestamp
+          </set>
+         WHERE ds_oid                 = #{id}
+    </update>
+    
+    <delete id="deleteDataset" parameterType="SrchDatasetVo">
+    	DELETE /*+ SQL_COMMENT: 데이터셋 삭제 */ 
+    	  FROM data_publish.dh_dataset          WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 ORIGIN 삭제 */ 
+    	  FROM data_publish.dh_dataset_model_ds WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 인스턴스 삭제 */ 
+    	  FROM data_publish.dh_dataset_instance_info WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 출력정보 삭제 */
+    	  FROM data_publish.dh_dataset_output_info   WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 첨부파일 삭제 */
+    	  FROM data_publish.dh_dataset_file          WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 조회조건 삭제 */
+    	  FROM data_publish.dh_dataset_search_inf_tb WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 이용신청 삭제 */
+    	  FROM data_publish.dh_dataset_userequest    WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 관심상품 삭제 */
+    	  FROM data_publish.dh_dataset_interest      WHERE ds_oid = #{id};
+    	  
+    	DELETE /*+ SQL_COMMENT: 데이터셋 문의내역 삭제 */
+    	  FROM data_publish.dh_dataset_inquiry       WHERE ds_oid = #{id};
+    </delete>
+    
+    
+    <select id="selectDatasetUseRequestPushList" parameterType="String" resultType="DatasetUseRequestVo">
+        select t1.ds_oid            AS datasetId
+	         , t1.req_user_id       AS userId
+	         , t1.push_uri          AS notificationUrl
+	      from data_publish.dh_dataset_userequest t1
+	 left join data_publish.dh_dataset t2            on t1.ds_oid = t2.ds_oid
+	 left join data_publish.dh_dataset_instance_info t3   on t2.ds_oid = t3.ds_oid
+	     where t3.instance_id = #{instanceId}
+	       and t1.push_uri != '';
+    </select>
+    
+    <select id="selectDsOidDatasetUseRequestPushList" parameterType="String" resultType="DatasetUseRequestVo">
+        select t1.ds_oid            AS datasetId
+	         , t1.req_user_id       AS userId
+	         , t1.push_uri          AS notificationUrl
+	         , t2.ds_status         AS status
+	      from data_publish.dh_dataset_userequest t1
+	 left join data_publish.dh_dataset t2            on t1.ds_oid = t2.ds_oid
+	 left join data_publish.dh_dataset_instance_info t3   on t2.ds_oid = t3.ds_oid
+	     where t1.ds_oid = #{dsOid}
+	       and t1.push_uri != '';
+    </select>
+    
+    <sql id="whereByDatasetAdaptor">
+        <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(schValue)">
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals('id', schCondition)">
+                AND t1.ad_model_id LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals('title', schCondition)">
+                AND t1.ad_title LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals('user', schCondition)">
+                AND t1.ad_create_user_id LIKE CONCAT('%', #{schValue}, '%')
+            </if>
+        </if>
+        <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND t1.ad_created >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+        <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND t1.ad_created <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+        </if>
+    </sql>
+    <sql id="orderByDatasetAdaptor">
+        ORDER BY t1.ad_created DESC
+    </sql>
+    
+    <select id="selectDatasetAdaptorCount" parameterType="SrchDatasetAdaptorVo" resultType="int">
+        SELECT COUNT(*)
+          FROM data_publish.dh_adaptor
+         WHERE 1=1
+         <include refid="whereByDatasetAdaptor"/>
+    </select>
+    
+    <select id="selectDatasetAdaptorList" parameterType="SrchDatasetAdaptorVo" resultType="DatasetAdaptorVo">
+        SELECT t1.ad_id                       AS id
+             , t1.ad_status                   AS status
+             , t2.code_name                   AS statusName
+             , t1.ad_create_user_id           AS creatorId
+             , t1.ad_transfer_type            AS transferType
+             , t1.ad_transfer_description     AS description
+             , t1.ad_created                  AS createdAt
+             , t1.ad_model_id                 AS modelId
+             , t1.ad_title                    AS title
+             , t1.ad_content                  AS content
+             , t1.ad_modified                 AS modifiedAt
+          FROM data_publish.dh_adaptor t1
+     LEFT JOIN data_publish.portal_code_tb t2 ON (t1.ad_status = t2.code_id)
+         WHERE 1=1
+         <include refid="whereByDatasetAdaptor"/>
+         <include refid="orderByDatasetAdaptor"/>
+         <include refid="limitPage"/>
+    </select>
+    
+    <select id="selectDatasetAdaptor" parameterType="String" resultType="datasetAdaptorVo">
+        SELECT t1.ad_id                       AS id
+             , t1.ad_status                   AS status
+             , t2.code_name                   AS statusName
+             , t1.ad_create_user_id           AS creatorId
+             , t1.ad_transfer_type            AS transferType
+             , t1.ad_transfer_description     AS description
+             , t1.ad_created                  AS createdAt
+             , t1.ad_model_id                 AS modelId
+             , t1.ad_title                    AS title
+             , t1.ad_content                  AS content
+             , t1.ad_modified                 AS modifiedAt
+          FROM data_publish.dh_adaptor t1
+     LEFT JOIN data_publish.portal_code_tb t2   ON (t1.ad_status = t2.code_id)
+         WHERE t1.ad_id = #{datasetAdapterId}
+    </select>
+    
+    <insert id="insertDatasetAdaptor" parameterType="SrchDatasetAdaptorVo">
+        INSERT INTO data_publish.dh_adaptor
+             ( ad_id
+             , ad_status
+             , ad_transfer_type
+             , ad_transfer_description
+             , ad_model_id
+             , ad_title
+             , ad_content
+             , ad_create_user_id
+             , ad_created
+             ) VALUES 
+             ( #{id}
+             , 'AD_SR_CD_001'
+             , #{transferType}
+             , #{description}
+             , #{modelId}
+             , #{title}
+             , #{content}
+             , #{loginUserId}
+             , current_timestamp )
+    </insert>
+    
+    <update id="updateDatasetAdaptor" parameterType="SrchDatasetAdaptorVo">
+        UPDATE data_publish.dh_adaptor 
+           SET ad_status             = #{status}
+             , ad_modified           = to_timestamp(#{modifiedAt}, 'YYYY-MM-DD"T"HH24:MI:SS')
+         WHERE ad_id = #{id}
+    </update>
+    
+    
+    
+    <select id="selectDatasetAdaptorByStatus" parameterType="SrchDatasetAdaptorVo" resultType="int">
+        SELECT COUNT(*)
+          FROM data_publish.dh_adaptor t1
+         WHERE t1.ad_id     = #{adaptorId}
+           AND t1.ad_status = 'AD_SR_CD_002'
+    </select>
+    
+    <select id="selectDatasetAdaptorFieldList" parameterType="SrchDatasetAdaptorFieldVo" resultType="DatasetAdaptorFieldVo">
+        SELECT t1.field_id                      AS id
+             , t1.ad_id                         AS adaptorId
+             , t1.field_kr_name                 AS fieldKrName
+             , t1.field_en_name                 AS fieldEnName
+             , t1.field_data_type               AS dataType
+             , t1.field_description             AS description
+             , t1.field_sequence                AS order
+          FROM data_publish.dh_adaptor_field t1
+         WHERE t1.ad_id = #{adaptorId}
+    </select>
+    
+    <select id="selectDatasetAdaptorField" parameterType="hashmap" resultType="DatasetAdaptorFieldVo">
+        SELECT t1.field_id                      AS id
+             , t1.ad_id                         AS adaptorId
+             , t1.field_kr_name                 AS fieldKrName
+             , t1.field_en_name                 AS fieldEnName
+             , t1.field_data_type               AS dataType
+             , t1.field_description             AS description
+             , t1.field_sequence                AS order
+          FROM data_publish.dh_adaptor_field t1
+         WHERE t1.field_id = #{id}
+           AND t1.ad_id    = #{adaptorId}
+    </select>
+    
+    <insert id="insertDatasetAdaptorField" parameterType="SrchDatasetAdaptorFieldVo">
+        INSERT INTO data_publish.dh_adaptor_field
+             ( field_id
+             , ad_id
+             , field_kr_name
+             , field_en_name
+             , field_data_type
+             , field_description
+             , field_sequence
+             ) VALUES 
+             ( #{id}
+             , #{adaptorId}
+             , #{fieldKrName}
+             , #{fieldEnName}
+             , #{dataType}
+             , #{description} 
+             , #{order} )
+    </insert>
+    
+    <update id="updateDatasetAdaptorField" parameterType="SrchDatasetAdaptorFieldVo">
+        UPDATE data_publish.dh_adaptor_field
+		   SET field_kr_name     = #{fieldKrName}
+		     , field_en_name     = #{fieldEnName}
+		     , field_data_type   = #{dataType}
+		     , field_description = #{description}
+		     , field_sequence    = #{order}
+		 WHERE field_id          = #{id}
+		   AND ad_id             = #{adaptorId}
+    </update>
+    
+    <delete id="deleteDatasetAdaptorField" parameterType="SrchDatasetAdaptorFieldVo">
+        DELETE FROM data_publish.dh_adaptor_field WHERE field_id = #{id} AND ad_id = #{adaptorId}
+    </delete>
+    
+	<sql id="whereByDatasetWishlist">
+		WHERE 1=1
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(loginUserId) and @kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(datasetId)">
+		  AND t1.user_id = #{loginUserId}
+		  AND t1.ds_oid  = #{datasetId}
+		</if>
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(loginUserId) and @kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isEmpty(datasetId)">
+		  AND t1.user_id = #{loginUserId}
+		</if>
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isEmpty(loginUserId) and @kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(datasetId)">
+		    <if test="paging">
+			    AND t1.user_id = #{loginUserId}
+			    AND t1.ds_oid  = #{datasetId}
+		    </if>
+		    <if test="!paging">
+			    AND t1.ds_oid  = #{datasetId}
+		    </if>
+		</if>
+	</sql>
+	
+	<sql id="orderByDatasetWishlist">
+	 	ORDER BY t1.created_at DESC
+	</sql>
+	
+	<select id="selectDatasetWishlistCount" parameterType="SrchDatasetInterestVo" resultType="int">
+		SELECT COUNT(*) FROM data_publish.dh_dataset_interest t1
+		<include refid="whereByDatasetWishlist"/>
+	</select>
+	
+	<select id="selectDatasetWishlistList" parameterType="SrchDatasetInterestVo" resultType="DatasetInterestVo">
+		SELECT itrt_id                   AS id
+			 , ds_oid                    AS datasetId
+			 , user_id                   AS userId
+			 , created_at                AS createdAt
+		  FROM data_publish.dh_dataset_interest t1
+		  <include refid="whereByDatasetWishlist"/>
+      	  <include refid="orderByDatasetWishlist"/>
+      	  <include refid="limitPage"/>
+	</select>
+	
+	<insert id="insertDatasetWishlist" parameterType="SrchDatasetInterestVo">
+		INSERT INTO data_publish.dh_dataset_interest
+				  ( itrt_id
+				  , ds_oid
+				  , user_id
+				  , created_at
+				  ) VALUES
+				  ( #{id}
+				  , #{datasetId}
+				  , #{loginUserId}
+				  , current_timestamp
+				  )
+	</insert>
+	
+	<delete id="deleteDatasetWishlist" parameterType="SrchDatasetInterestVo">
+		DELETE FROM data_publish.dh_dataset_interest WHERE ds_oid = #{datasetId} AND itrt_id = #{id}
+	</delete>
+	
+	<select id="selectDatasetInquiryList" parameterType="SrchDatasetInquiryVo" resultType="DatasetInquiryVo">
+		SELECT t1.inq_oid                      AS id
+			 , t1.ds_oid                       AS datasetId
+			 , t1.inq_question_content         AS question
+			 , t1.inq_answer_content           AS answer
+			 , t1.inq_secret                   AS secret
+			 , t1.inq_status                   AS status
+			 , t2.code_name                    AS statusName
+			 , t1.inq_create_user_id           AS creatorId
+			 , t1.inq_created                  AS createdAt
+			 , t1.inq_answer_user_id           AS respondentId
+			 , t1.inq_answer_date              AS responsedAt
+		  FROM data_publish.dh_dataset_inquiry t1
+	 LEFT JOIN data_publish.portal_code_tb     t2 ON (t1.inq_status = t2.code_id)
+		 WHERE ds_oid  = #{datasetId}
+	</select>
+	
+	<select id="selectDatasetInquiry" parameterType="hashmap" resultType="DatasetInquiryVo">
+		SELECT t1.inq_oid                      AS id           
+			 , t1.ds_oid                       AS datasetId    
+			 , t1.inq_question_content         AS question     
+			 , t1.inq_answer_content           AS answer       
+			 , t1.inq_secret                   AS secret     
+			 , t1.inq_status                   AS status       
+			 , t2.code_name                    AS statusName   
+			 , t1.inq_create_user_id           AS creatorId    
+			 , t1.inq_created                  AS createdAt    
+			 , t1.inq_answer_user_id           AS respondentId 
+			 , t1.inq_answer_date              AS responsedAt  
+		  FROM data_publish.dh_dataset_inquiry t1
+	 LEFT JOIN data_publish.portal_code_tb     t2 ON (t1.inq_status = t2.code_id)
+		 WHERE inq_oid = #{qnaId}
+		   AND ds_oid  = #{datasetId}
+	</select>
+	
+	<insert id="insertDatasetInquiry" parameterType="SrchDatasetInquiryVo">
+		INSERT INTO data_publish.dh_dataset_inquiry
+				  ( inq_oid
+				  , ds_oid
+				  , inq_question_content
+				  , inq_answer_content
+				  , inq_secret
+				  , inq_status
+				  , inq_create_user_id
+				  , inq_created
+				  ) VALUES
+				  ( #{id}
+				  , #{datasetId}
+				  , #{question}
+				  , #{answer}
+				  , #{secret}
+				  , 'answerWait'
+				  , #{loginUserId}
+				  , current_timestamp
+				  )
+	</insert>
+	
+	<update id="updateDatasetInquiry" parameterType="SrchDatasetInquiryVo">
+		UPDATE data_publish.dh_dataset_inquiry
+		   SET inq_answer_content    = #{answer}
+			 , inq_status            = 'answerComplete'
+			 , inq_answer_user_id    = #{loginUserId}
+             , inq_answer_date       = current_timestamp 
+		 WHERE inq_oid               = #{id}
+		   AND ds_oid                = #{datasetId}
+	</update>
+	
+	<delete id="deleteDatasetInquiry" parameterType="SrchDatasetInquiryVo">
+		DELETE FROM data_publish.dh_dataset_inquiry WHERE inq_oid = #{id} AND ds_oid = #{datasetId}
+	</delete>
+	
+	
+	<sql id="whereByDataAnalystRequest">
+		WHERE 1=1
+		  <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(schValue)">
+          AND t1.ar_req_status = #{schValue}
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(schValue2)">
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(schCondition2, 'arModelOid')">
+            AND CAST(t1.ar_model_oid AS TEXT) LIKE CONCAT('%', #{schValue2}, '%')
+            </if>
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(schCondition2, 'arReasonApply')">
+            AND t1.ar_reason_apply LIKE CONCAT('%', #{schValue2}, '%')
+            </if>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND t1.ar_created >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND t1.ar_created <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+          </if>
+          <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(schValue3)">
+          AND t1.ar_user_id = #{schValue3}
+          </if>
+	</sql>
+	
+	<sql id="orderByDataAnalystRequest">
+	   ORDER BY t1.ar_created DESC
+	</sql>
+	
+	<select id="selectDataAnalystRequestCount" parameterType="SrchDataAnalystRequestVo" resultType="int">
+		SELECT COUNT(*) FROM data_publish.dh_datamodel_analyst_request t1
+		<include refid="whereByDataAnalystRequest"/>
+	</select>
+	
+	<select id="selectDataAnalystRequestList" parameterType="SrchDataAnalystRequestVo" resultType="DataAnalystRequestVo">
+        SELECT t1.ar_model_oid          AS id
+		     , t1.ar_req_status         AS requestStatus
+		     , t2.code_name             AS requestStatusName
+		     , t1.ar_reason_apply       AS reason
+		     , t1.ar_user_id            AS creatorId
+		     , t1.ar_created            AS createdAt
+		     , t1.ar_manager_id         AS modifierId
+		     , t1.ar_updated            AS modifiedAt
+		  FROM data_publish.dh_datamodel_analyst_request t1
+	 LEFT JOIN data_publish.portal_code_tb               t2 ON (t1.ar_req_status = t2.code_id)
+		  <include refid="whereByDataAnalystRequest"/>
+		  <include refid="orderByDataAnalystRequest"/>
+		  <include refid="limitPage"/>
+	</select>
+	
+	<insert id="insertDataAnalystRequest" parameterType="SrchDataAnalystRequestVo">
+		INSERT INTO data_publish.dh_datamodel_analyst_request
+				  ( ar_model_oid
+				  , ar_req_status
+				  , ar_reason_apply
+				  , ar_user_id
+				  , ar_created
+				  ) VALUES
+				  ( #{id}
+				  , #{requestStatus}
+				  , #{reason}
+				  , #{loginUserId}
+				  , current_timestamp
+				  )
+	</insert>
+    
+    <select id="selectDataAnalystRequest" parameterType="hashmap" resultType="DataAnalystRequestVo">
+        SELECT t1.ar_model_oid          AS id
+		     , t1.ar_req_status         AS requestStatus
+		     , t2.code_name             AS requestStatusName
+		     , t1.ar_reason_apply       AS reason
+		     , t1.ar_user_id            AS creatorId
+		     , t1.ar_created            AS createdAt
+		     , t1.ar_manager_id         AS modifierId
+		     , t1.ar_updated            AS modifiedAt
+		  FROM data_publish.dh_datamodel_analyst_request t1
+	 LEFT JOIN data_publish.portal_code_tb               t2 ON (t1.ar_req_status = t2.code_id)
+		 WHERE t1.ar_model_oid = #{requestId}
+    </select>
+	
+	<update id="updateDataAnalystRequest" parameterType="SrchDataAnalystRequestVo">
+		UPDATE data_publish.dh_datamodel_analyst_request
+		   SET ar_req_status   = #{requestStatus}
+			 , ar_manager_id   = #{loginUserId}
+			 , ar_updated      = current_timestamp
+		 WHERE ar_model_oid    = #{id}
+	</update>
+	
+	<delete id="deleteDataAnalystRequest">
+	   DELETE FROM data_publish.dh_datamodel_analyst_request
+	    WHERE ar_model_oid    = #{value}
+	</delete>
+	
+	<select id="selectInfDataAnalystRequestModelList" resultType="String">
+       SELECT distinct(ds_model_id) AS modelId
+	     FROM data_publish.dh_datamodel_analyst_request tb1
+	LEFT JOIN data_publish.dh_data_analyst_model_info tb2 on tb1.ar_model_oid = tb2.ar_model_oid
+	    WHERE tb1.ar_req_status = 'apprComplete'
+	      AND tb1.ar_user_id = #{userId}
+    </select>
+    
+    <select id="selectDataAnalystRequestModelList" parameterType="SrchDataAnalystRequestModelVo" resultType="DataAnalystRequestModelVo">
+        SELECT ami_oid              AS id
+             , ar_model_oid         AS analystId
+             , ds_model_id          AS modelId
+          FROM data_publish.dh_data_analyst_model_info
+         WHERE ar_model_oid = #{analystId}
+    </select>
+    
+    <select id="selectDataAnalystRequestModel" parameterType="hashmap" resultType="DataAnalystRequestModelVo">
+        SELECT ami_oid              AS id
+             , ar_model_oid         AS analysyId
+             , ds_model_id          AS modelId
+          FROM data_publish.dh_data_analyst_model_info
+         WHERE ar_model_oid = #{analystId}
+           AND ami_oid      = #{modelId}
+    </select>
+    
+	<insert id="insertDataAnalystRequestModel" parameterType="SrchDataAnalystRequestModelVo">
+        INSERT INTO data_publish.dh_data_analyst_model_info
+                  ( ami_oid
+                  , ar_model_oid
+                  , ds_model_id
+                  ) VALUES
+                  ( #{id}
+                  , #{analystId}
+                  , #{modelId}
+                  )
+    </insert>
+    
+	<delete id="deleteDataAnalystRequestModel" parameterType="SrchDataAnalystRequestModelVo">
+        DELETE FROM data_publish.dh_data_analyst_model_info WHERE ar_model_oid = #{analystId} AND ami_oid = #{id}
+    </delete>
+    
+	<select id="selectCategoryDatasetCount" parameterType="list" resultType="int">
+		SELECT COUNT(*) FROM data_publish.dh_dataset
+		WHERE ds_category_oid IN
+		<foreach collection="list" item="childOids" index="index" open="(" separator="," close=")">
+            #{childOids}
+        </foreach> 
+	</select>
+	
+	<sql id="whereByDatasetUseHistory">
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(datasetId)">
+			AND t1.ds_oid = #{datasetId}
+		</if>
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(loginUserId)">
+			AND t1.use_user_id = #{loginUserId}
+		</if>
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+            <![CDATA[  AND t1.use_time >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+		</if>
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+            <![CDATA[  AND t1.use_time <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+		</if>
+    </sql>
+    <sql id="orderByDatasetUseHistory">
+    </sql>
+    
+	
+	<select id="selectDatasetUseHistoryCount" parameterType="SrchDatasetUseHistoryVo" resultType="int">
+		SELECT COUNT(*) FROM data_publish.dh_use_history t1 WHERE 1=1
+		<include refid="whereByDatasetUseHistory"/>
+	</select>
+	
+	<select id="selectDatasetUseHistoryList" parameterType="SrchDatasetUseHistoryVo" resultType="DatasetUseHistoryVo">
+		SELECT t1.use_id                      AS id
+			 , t1.use_user_id                 AS userId
+			 , t1.protocol                    AS protocal
+			 , t1.transmission_type           AS transmissionType
+			 , t1.pay_tf                      AS payTf
+			 , t1.use_time                    AS createdAt
+			 , t1.ds_oid                      AS datasetId
+		  FROM data_publish.dh_use_history t1
+		 WHERE 1=1
+		  <include refid="whereByDatasetUseHistory"/>
+		  <include refid="orderByDatasetUseHistory"/>
+		  <include refid="limitPage"/>
+	</select>
+	
+	<insert id="insertDatasetUseHistory" parameterType="SrchDatasetUseHistoryVo">
+	   INSERT INTO data_publish.dh_use_history
+	        ( use_id
+			, use_user_id
+			, protocol
+			, transmission_type
+			, pay_tf
+			, use_time
+			, ds_oid
+			) VALUES 
+			( #{id}
+            , #{userId}
+            , #{protocol}
+            , #{transmissionType}
+            , #{payTf}
+            , current_timestamp
+            , #{datasetId}
+			)
+	</insert>
+	
+	<select id="selectDatasetSatisfactionList" parameterType="SrchDatasetSatisfactionRatingVo" resultType="DatasetSatisfactionRatingVo">
+		SELECT t1.dsr_oid               AS id
+			 , t1.ds_oid                AS datasetId
+			 , t1.dsr_score             AS score
+			 , t1.dsr_review            AS review
+			 , t1.dsr_user_id           AS userId
+			 , t1.dsr_cre_dt            AS createdAt
+		 FROM data_publish.dh_dataset_satisfaction_rating t1
+		WHERE t1.ds_oid  = #{datasetId}
+    </select>
+    
+	<select id="selectDatasetSatisfaction" parameterType="hashmap" resultType="DatasetSatisfactionRatingVo">
+		SELECT t1.dsr_oid               AS id
+			 , t1.ds_oid                AS datasetId
+			 , t1.dsr_score             AS score
+			 , t1.dsr_review            AS review
+			 , t1.dsr_user_id           AS userId
+			 , t1.dsr_cre_dt            AS createdAt
+		  FROM data_publish.dh_dataset_satisfaction_rating t1
+		 WHERE t1.dsr_oid = #{ratingId}
+		   AND t1.ds_oid  = #{datasetId}
+    </select>
+    
+	<insert id="insertDatasetSatisfaction" parameterType="SrchDatasetSatisfactionRatingVo">
+	   INSERT INTO data_publish.dh_dataset_satisfaction_rating
+	        ( dsr_oid
+	        , ds_oid
+			, dsr_score
+			, dsr_review
+			, dsr_user_id
+			, dsr_cre_dt 
+			) VALUES 
+			( #{id}
+			, #{datasetId}
+            , #{score}
+            , #{review}
+            , #{loginUserId}
+            , current_timestamp
+			)
+	</insert>
+	
+	<update id="updateDatasetSatisfaction" parameterType="SrchDataAnalystRequestVo">
+		UPDATE data_publish.dh_dataset_satisfaction_rating
+		   SET dsr_score    = #{score}
+			 , dsr_review   = #{review}
+		 WHERE dsr_oid      = #{id}
+		   AND ds_oid       = #{datasetId}
+	</update>
+	
+	<delete id="deleteDatasetSatisfaction" parameterType="SrchDatasetSatisfactionRatingVo">
+	   DELETE FROM data_publish.dh_dataset_satisfaction_rating WHERE ds_oid = #{datasetId} AND dsr_oid = #{id}
+	</delete>
+	
+	<insert id="insertDatasetApprovalHistory" parameterType="hashmap">
+		<selectKey keyProperty="degree" resultType="int" order="BEFORE" >
+			SELECT COALESCE(null, MAX(degree), 0) + 1 FROM data_publish.dh_dataset_approval_hist WHERE ds_oid = #{datasetId}
+		</selectKey>
+		INSERT INTO data_publish.dh_dataset_approval_hist
+		    ( apphist_id
+			, degree
+			, ds_status
+	        , ds_oid
+			, assignee_id
+			, apphist_created
+			) VALUES 
+			( #{id}
+			, #{degree}
+            , #{status}
+            , #{datasetId}
+            , #{loginUserId}
+            , current_timestamp
+			)
+	</insert>
+	
+	<insert id="insertDatasetOrigin" parameterType="SrchDatasetOriginVo">
+		INSERT INTO data_publish.dh_dataset_model_ds
+			( dmd_id
+			, ds_origin_id
+			, ds_oid
+			) VALUES 
+			( CAST(#{id} AS BIGINT)
+			, #{datasetOriginId}
+			, #{datasetId}
+			)
+	</insert>
+	<select id="selectDatasetOriginList" parameterType="SrchDatasetOriginVo" resultType="DatasetOriginVo">
+		SELECT dmd_id               AS id
+			 , ds_origin_id         AS datasetOriginId
+			 , ds_oid               AS datasetId
+		  FROM data_publish.dh_dataset_model_ds
+		 WHERE ds_oid  = #{datasetId}
+	</select>
+	<select id="selectDatasetOrigin" parameterType="hashmap" resultType="DatasetOriginVo">
+		SELECT dmd_id               AS id
+			 , ds_origin_id         AS datasetOriginId
+			 , ds_oid               AS datasetId
+		  FROM data_publish.dh_dataset_model_ds
+		 WHERE dmd_id  = #{id}
+		   AND ds_oid  = #{datasetId}
+	</select>
+	<delete id="deleteDatasetOrigin" parameterType="SrchDatasetOriginVo">
+		DELETE FROM data_publish.dh_dataset_model_ds WHERE ds_oid = #{datasetId} AND dmd_id = #{id}
+	</delete>
+	
+	<select id="selectDatasetPricePoliciesList" parameterType="SrchDatasetPricePoliciesVo" resultType="DatasetPricePoliciesVo">
+		SELECT ds_price_id       AS id
+			 , title             AS title
+			 , traffic_type      AS trafficType
+			 , daily_limit       AS limit
+			 , ds_oid            AS datasetId
+		  FROM data_publish.dh_dataset_price
+		 WHERE ds_oid = #{datasetId}
+	</select>
+	<select id="selectDatasetPricePolicies" parameterType="long" resultType="DatasetPricePoliciesVo">
+		SELECT ds_price_id       AS id
+			 , title             AS title
+			 , traffic_type      AS trafficType
+			 , daily_limit       AS limit
+			 , ds_oid            AS datasetId
+		  FROM data_publish.dh_dataset_price
+		 WHERE ds_price_id  = #{priceId}
+	</select>
+	<insert id="insertDatasetPricePolicies" parameterType="SrchDatasetPricePoliciesVo">
+		INSERT INTO data_publish.dh_dataset_price
+			( ds_price_id
+			, title
+			, traffic_type
+			, daily_limit
+			, ds_oid
+			) VALUES 
+			( #{id}
+			, #{title}
+			, #{trafficType}
+			, #{limit}
+			, #{datasetId}
+			)
+	</insert>
+	<delete id="deleteDatasetPricePolicies" parameterType="SrchDatasetPricePoliciesVo">
+		DELETE FROM data_publish.dh_dataset_price WHERE ds_price_id = #{id}
+	</delete>
+	
+	<select id="selectDatasetPricePoliciesPeriodPriceList" parameterType="SrchDatasetPricePoliciesPeriodPriceVo" resultType="DatasetPricePoliciesPeriodPriceVo">
+		SELECT ds_period_id     AS id
+			 , ds_price_id      AS priceId
+			 , period_cd        AS periodCd
+			 , price            AS price
+		  FROM data_publish.dh_dataset_period_price
+		 WHERE ds_price_id  = #{priceId}
+	</select>
+	
+	<select id="selectDatasetPricePoliciesPeriodPrice" parameterType="hashmap" resultType="DatasetPricePoliciesPeriodPriceVo">
+		SELECT ds_period_id     AS id
+			 , ds_price_id      AS priceId
+			 , period_cd        AS periodCd
+			 , price            AS price
+		  FROM data_publish.dh_dataset_period_price
+		 WHERE ds_period_id  = #{periodId}
+		   AND ds_price_id   = #{priceId}
+	</select>
+	
+	<insert id="insertDatasetPricePoliciesPeriodPrice" parameterType="SrchDatasetPricePoliciesPeriodPriceVo">
+		INSERT INTO data_publish.dh_dataset_period_price
+			( ds_period_id
+			, ds_price_id
+			, period_cd
+			, price
+			) VALUES 
+			( #{id}
+			, #{priceId}
+			, #{periodCd}
+			, #{price}
+			)
+	</insert>
+	
+	<delete id="deleteDatasetPricePoliciesPeriodPrice" parameterType="SrchDatasetPricePoliciesPeriodPriceVo">
+		DELETE FROM data_publish.dh_dataset_period_price WHERE ds_period_id = #{id}
+	</delete>
+	
+	
+	
+	<sql id="whereByDatasetUsagePayment">
+		<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(requestId)">
+			AND ddup.req_id = #{requestId}
+		</if>
+	</sql>
+	
+	<sql id="orderByDatasetUsagePayment">
+	</sql>
+	
+    <select id="selectDatasetUsagePaymentCount" parameterType="SrchDatasetUseRequestPaymentVo" resultType="int">
+       SELECT COUNT(*)
+         FROM data_publish.dh_dataset_userequest_pay ddup
+        WHERE 1=1
+        <include refid="whereByDatasetUsagePayment"/>
+    </select>
+    
+	<select id="selectDatasetUsagePaymentList" parameterType="SrchDatasetUseRequestPaymentVo" resultType="DatasetUseRequestPaymentVo">
+		SELECT ddup.pay_id             AS id
+			 , ddup.req_id             AS requestId
+			 , ddup.expired_at         AS expiredAt
+			 , ddup.pay_status         AS payStatus
+			 , ddup.completed_at       AS completedAt
+			 , ddup.ds_price_id        AS priceId
+			 , ddup.ds_period_id       AS periodId
+		  FROM data_publish.dh_dataset_userequest_pay ddup
+		 WHERE 1=1
+		  <include refid="whereByDatasetUsagePayment"/>
+          <include refid="orderByDatasetUsagePayment"/>
+      	  <include refid="limitPage"/>
+	</select>
+	
+    <select id="selectDatasetUsagePayment" parameterType="hashmap" resultType="DatasetUseRequestPaymentVo">
+        SELECT pay_id             AS id
+			 , req_id             AS requestId
+			 , expired_at         AS expiredAt
+			 , pay_status         AS payStatus
+			 , completed_at       AS completedAt
+			 , ds_price_id        AS priceId
+			 , ds_period_id       AS periodId
+          FROM data_publish.dh_dataset_userequest_pay
+         WHERE req_id      = #{requestId}
+           AND pay_id      = #{id}
+    </select>
+    
+    <insert id="insertDatasetUsagePayment" parameterType="SrchDatasetUseRequestPaymentVo">
+    INSERT INTO data_publish.dh_dataset_userequest_pay
+             ( pay_id
+			 , req_id
+			 , expired_at
+			 , pay_status
+			 , completed_at
+			 , ds_price_id 
+			 , ds_period_id 
+             ) VALUES
+             ( #{id}
+			 , #{requestId}
+			 , #{expiredAt}
+			 , #{payStatus}
+			 , #{completedAt}
+			 , #{priceId}
+			 , #{periodId}
+             )
+    </insert>
+	
+	<update id="updateDatasetUsagePayment" parameterType="SrchDatasetUseRequestPaymentVo">
+		UPDATE data_publish.dh_dataset_userequest_pay
+			<set>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(expiredAt)">
+					expired_at           = to_timestamp(#{expiredAt}, 'YYYY-MM-DD HH24:MI:SS'), 
+				</if>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(payStatus)">
+					pay_status           = #{payStatus}, 
+				</if>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(payStatus, 'pay_complete')">
+					completed_at         = current_timestamp, 
+				</if>
+				<if test="priceId != 0">
+					ds_price_id          = #{priceId}, 
+				</if>
+				<if test="periodId != 0">
+					ds_period_id           = #{periodId}, 
+				</if>
+			</set>
+		 WHERE pay_id               = #{id}
+		   AND req_id               = #{requestId}
+	</update>
+	
+    <delete id="deleteDatasetUsagePayment" parameterType="SrchDatasetUseRequestPaymentVo">
+        DELETE FROM data_publish.dh_dataset_userequest_pay WHERE pay_id = #{id} AND req_id = #{requestId}
+    </delete>
+	
+	
+	
+	<sql id="whereByDatasetUsageReception">
+		AND req_id = #{requestId}
+	</sql>
+	
+	<sql id="orderByDatasetUsageReception">
+	</sql>
+	
+    <select id="selectDatasetUsageReceptionCount" parameterType="SrchDatasetUseRequestReceptionVo" resultType="int">
+       SELECT COUNT(*) FROM data_publish.dh_dataset_userequest_reception WHERE 1=1
+        <include refid="whereByDatasetUsageReception"/>
+    </select>
+    
+	<select id="selectDatasetUsageReceptionList" parameterType="SrchDatasetUseRequestReceptionVo" resultType="DatasetUseRequestReceptionVo">
+		SELECT recv_id    AS id
+			 , req_id     AS requestId
+			 , protocol   AS protocol
+			 , url        AS url
+		  FROM data_publish.dh_dataset_userequest_reception
+		 WHERE 1=1
+		  <include refid="whereByDatasetUsageReception"/>
+          <include refid="orderByDatasetUsageReception"/>
+      	  <include refid="limitPage"/>
+	</select>
+	
+    <select id="selectDatasetUsageReception" parameterType="hashmap" resultType="DatasetUseRequestReceptionVo">
+        SELECT recv_id    AS id
+			 , req_id     AS requestId
+			 , protocol   AS protocol
+			 , url        AS url
+		  FROM data_publish.dh_dataset_userequest_reception
+         WHERE req_id      = #{requestId}
+           AND pay_id      = #{id}
+    </select>
+    
+    <insert id="insertDatasetUsageReception" parameterType="SrchDatasetUseRequestReceptionVo">
+    INSERT INTO data_publish.dh_dataset_userequest_reception
+             ( recv_id
+			 , req_id
+			 , protocol
+			 , url
+             ) VALUES
+             ( #{id}
+			 , #{requestId}
+			 , #{protocol}
+			 , #{url}
+             )
+    </insert>
+	
+	<update id="updateDatasetUsageReception" parameterType="SrchDatasetUseRequestReceptionVo">
+		UPDATE data_publish.dh_dataset_userequest_reception
+			<set>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(protocol)">
+					protocol      = #{protocol}, 
+				</if>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(url)">
+					url           = #{url}, 
+				</if>
+			</set>
+		 WHERE recv_id              = #{id}
+		   AND req_id               = #{requestId}
+	</update>
+	
+    <delete id="deleteDatasetUsageReception" parameterType="SrchDatasetUseRequestReceptionVo">
+        DELETE FROM data_publish.dh_dataset_userequest_reception WHERE recv_id = #{id} AND req_id = #{requestId}
+    </delete>
+    
+    
+	<sql id="whereByDatasetUsageRefund">
+		<if test="requestId != 0">
+			AND req_id = #{requestId}
+		</if>
+	</sql>
+	
+	<sql id="orderByDatasetUsageRefund">
+		ORDER BY refund_degree DESC
+	</sql>
+	
+    <select id="selectDatasetUsageRefundCount" parameterType="SrchDatasetUseRequestRefundVo" resultType="int">
+       SELECT COUNT(*) FROM data_publish.dh_dataset_userequest_refund WHERE 1=1
+        <include refid="whereByDatasetUsageRefund"/>
+    </select>
+    
+	<select id="selectDatasetUsageRefundList" parameterType="SrchDatasetUseRequestRefundVo" resultType="DatasetUseRequestRefundVo">
+		SELECT refund_id             AS id
+			 , req_id                AS requestId
+			 , status                AS status
+			 , refund_degree         AS degree
+			 , reason                AS reason
+			 , created_at            AS createdAt
+			 , update_at             AS updateAt
+			 , refuse_reason         AS refuseReason
+			 , refuse_at             AS refuseAt
+		  FROM data_publish.dh_dataset_userequest_refund
+		 WHERE 1=1
+		  <include refid="whereByDatasetUsageRefund"/>
+          <include refid="orderByDatasetUsageRefund"/>
+      	  <include refid="limitPage"/>
+	</select>
+	
+    <select id="selectDatasetUsageRefund" parameterType="hashmap" resultType="DatasetUseRequestRefundVo">
+        SELECT refund_id             AS id
+			 , req_id                AS requestId
+			 , status                AS status
+			 , refund_degree         AS degree
+			 , reason                AS reason
+			 , created_at            AS createdAt
+			 , update_at             AS updateAt
+			 , refuse_reason         AS refuseReason
+			 , refuse_at             AS refuseAt
+		  FROM data_publish.dh_dataset_userequest_refund
+         WHERE req_id      = #{requestId}
+           AND refund_id   = #{id}
+    </select>
+    
+    <insert id="insertDatasetUsageRefund" parameterType="SrchDatasetUseRequestRefundVo">
+	    <selectKey keyProperty="degree" resultType="int" order="BEFORE" >
+	        SELECT COALESCE(null, MAX(refund_degree), 0) + 1 FROM data_publish.dh_dataset_userequest_refund WHERE req_id = #{requestId}
+	    </selectKey>
+	    INSERT INTO data_publish.dh_dataset_userequest_refund
+	             ( refund_id
+				 , req_id
+				 , status
+				 , refund_degree
+				 , reason
+				 , created_at
+	             ) VALUES
+	             ( #{id}
+				 , #{requestId}
+				 , #{status}
+				 , #{degree}
+				 , #{reason}
+				 , current_timestamp
+	             )
+    </insert>
+	
+	<update id="updateDatasetUsageRefund" parameterType="SrchDatasetUseRequestRefundVo">
+		UPDATE data_publish.dh_dataset_userequest_refund
+			<set>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(status)">
+					status= #{status},
+				</if>
+				<if test="degree > 0">
+					refund_degree = #{degree},
+				</if>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(reason)">
+					reason = #{reason},
+				</if>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(status, 'pay_complete')">
+					update_at = current_timestamp,
+				</if>
+				<if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(refuseReason)">
+					refuse_reason = #{refuseReason},
+					refuse_at     = current_timestamp,
+				</if>
+			</set>
+		 WHERE refund_id            = #{id}
+		   AND req_id               = #{requestId}
+	</update>
+	
+    <delete id="deleteDatasetUsageRefund" parameterType="SrchDatasetUseRequestRefundVo">
+        DELETE FROM data_publish.dh_dataset_userequest_refund WHERE refund_id = #{id} AND req_id = #{requestId}
+    </delete>
+    
+    
+    <select id="selectDatasetDeviceInfo" resultType="DatasetInfDeviceVo">
+        SELECT /*+ SQL_COMMENT: 디바이스 연결 API 목록 조회 */
+        	   t1.dia_id			   AS id
+             , t1.ds_oid               AS ds_oid   
+             , t1.api_group_id         AS api_group_Id 
+          FROM data_publish.dh_dataset_inf_api_tb t1
+         WHERE t1.ds_oid = #{datasetId}
+    </select>
+    
+    <insert id="createDatasetDevice" parameterType="DatasetInfDeviceVo">
+    	INSERT /*+ SQL_COMMENT: 디바이스 연결 API 등록 */ 
+    	  INTO data_publish.dh_dataset_inf_api_tb 
+    	  	   ( dia_id
+			   , api_group_id
+			   , ds_oid )
+        VALUES
+        	   ( #{id}
+			   , #{apiGroupId}
+			   , #{dsOid} )
+    </insert>
+    
+    <insert id="deleteDatasetDevice">
+    	DELETE /*+ SQL_COMMENT: 디바이스 연결 API 삭제 */ 
+    	  FROM data_publish.dh_dataset_inf_api_tb
+    	 WHERE ds_oid = #{dsOid} 
+    </insert>
+    
+    <select id="selectDsOriginId" parameterType="String" resultType="String">
+		SELECT ds_origin_id AS datasetIds FROM data_publish.dh_dataset_model_ds
+		   WHERE ds_oid = #{dsOid}
+    </select>
+    
+    <delete id="deleteDatasetModelDsByDsId" parameterType="String">
+    	delete from data_publish.dh_dataset_model_ds where ds_oid = #{dsOid} 
+    </delete>
+    
+    <delete id="deleteDatasetInstanceInfoByDsId" parameterType="String">
+   		delete from data_publish.dh_dataset_instance_info where ds_oid = #{dsOid}
+    </delete>
+    
+    <delete id="deleteDatasetOutputInfoByDsId" parameterType="String">
+   		delete from data_publish.dh_dataset_output_info where ds_oid = #{dsOid}
+    </delete>
+    
+    <delete id="deleteDatasetSearchInfoByDsId" parameterType="String">
+   		delete from data_publish.dh_dataset_search_inf_tb where ds_oid = #{dsOid}
+    </delete>
+    
+    
+</mapper>

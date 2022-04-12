@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.datapublish.feature.common.mapper.CodeGroupMapper">
+    <insert id="insertCodeGroup" parameterType="codeGroupVo">
+        INSERT INTO data_publish.portal_codegroup_tb
+             ( codegroup_id
+             , codegroup_name
+             , codegroup_use_fl
+             , codegroup_col
+             , codegroup_desc
+             , codegroup_cre_usr_id
+             , codegroup_cre_dt
+             ) VALUES 
+             ( #{codeGroupId}
+             , #{codeGroupName}
+             , #{codeGroupUseFl}
+             , #{codeGroupCol}
+             , #{codeGroupDesc}
+             , #{codeGroupCreUsrId}
+             , current_timestamp
+             )
+    </insert>
+    <update id="updateCodeGroup" parameterType="codeGroupVo">
+        UPDATE data_publish.portal_codegroup_tb 
+           SET codegroup_name       = #{codeGroupName}
+             , codegroup_use_fl     = #{codeGroupUseFl}
+             , codegroup_col        = #{codeGroupCol}
+             , codegroup_desc       = #{codeGroupDesc}
+             , codegroup_upt_usr_id = #{codeGroupUptUsrId}
+             , codegroup_upt_dt     = current_timestamp
+         WHERE codegroup_id         = #{codeGroupId}
+    </update>
+</mapper>

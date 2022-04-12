@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.faq.mapper.FaqFileMapper">
+    <select id="selectFaqFile" parameterType="long" resultType="faqFileVo">
+        SELECT faqfile_oid
+             , faqfile_org_nm
+             ,  faqfile_saved_nm
+             ,  faqfile_save_path
+             ,  faqfile_size_byte
+             ,  faq_oid
+          FROM portal.portal_faqfile_tb
+         WHERE faqfile_oid = #{faqFileOid}
+    </select>
+    
+     <select id="selectFaqFileList" parameterType="long" resultType="faqFileVo">
+        SELECT faqfile_oid
+             , faqfile_org_nm
+             , faqfile_saved_nm
+             , faqfile_save_path
+             , faqfile_size_byte
+             , faq_oid
+          FROM portal.portal_faqfile_tb
+         WHERE faq_oid = #{faqOid}
+    </select>
+    
+    
+    <insert id="insertFaqFile" parameterType="srchFaqFileVo">
+        INSERT INTO portal.portal_faqfile_tb
+             (
+                  faqfile_org_nm
+                , faqfile_saved_nm
+                , faqfile_save_path
+                , faqfile_size_byte
+                , faq_oid
+                , faqfile_oid
+             )
+        VALUES
+             (
+                 #{faqfileOrgNm}
+               , #{faqfileSavedNm}
+               , #{faqfileSavePath}
+               , #{faqfileSizeByte}
+               , #{faqOid}
+               , #{faqfileOid}
+             )
+    </insert>
+    <delete id="deleteFaqFile" parameterType="long">
+        DELETE FROM portal.portal_faqfile_tb
+         WHERE faqfile_oid = #{faqfileOid}
+    </delete>
+</mapper>

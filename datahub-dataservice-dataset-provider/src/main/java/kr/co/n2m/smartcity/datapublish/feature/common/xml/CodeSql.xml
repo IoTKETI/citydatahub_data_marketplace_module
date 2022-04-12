@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.datapublish.feature.common.mapper.CodeMapper">
+    <insert id="insertCode" parameterType="codeVo">
+        INSERT INTO data_publish.portal_code_tb
+             ( code_id
+             , code_name
+             , code_use_fl
+             , code_sort
+             , code_desc
+             , code_cre_usr_id
+             , code_cre_dt
+             , codegroup_id
+             ) VALUES 
+             ( #{codeId}
+             , #{codeName}
+             , #{codeUseFl}
+             , #{codeSort}
+             , #{codeDesc}
+             , #{codeCreUsrId}
+             , current_timestamp
+             , #{codeGroupId}
+             )
+    </insert>
+    <update id="updateCode" parameterType="codeVo">
+        UPDATE data_publish.portal_code_tb 
+           SET code_name       = #{codeName}
+             , code_use_fl     = #{codeUseFl}
+             , code_sort       = #{codeSort}
+             , code_desc       = #{codeDesc}
+             , code_upt_usr_id = #{codeUptUsrId}
+             , code_upt_dt     = current_timestamp
+         WHERE codegroup_id    = #{codeGroupId}
+           AND code_id         = #{codeId}
+    </update>
+</mapper>

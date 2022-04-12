@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.authgroup.mapper.AuthgroupMapper">
+<sql id="limitPage">
+    OFFSET #{startIndex} LIMIT #{pageListSize}
+  </sql>
+  <sql id="whereByAuthgroup">
+		WHERE 1=1
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+			<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'authgroupNm')">
+				AND a.authgroup_nm LIKE CONCAT('%', #{schValue}, '%')
+			</if>
+			<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'authgroupDesc')">
+				AND a.authgroup_desc LIKE CONCAT('%', #{schValue}, '%')
+			</if>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue2)">
+				AND a.authgroup_use_fl LIKE CONCAT('%', #{schValue2}, '%')
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue3)">
+				AND a.authgroup_gb_cd LIKE CONCAT('%', #{schValue3}, '%')
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue4)">
+				AND a2.user_id LIKE CONCAT('%', #{schValue4}, '%')
+		</if>
+	</sql>
+	<sql id="orderByAuthgroup">
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+			<choose>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'authgroupNm')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY a.authgroup_nm DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY a.authgroup_nm ASC
+						</when>
+						<otherwise>
+							ORDER BY a.authgroup_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'authgroupUseFl')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY a.authgroup_use_fl DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY a.authgroup_use_fl ASC
+						</when>
+						<otherwise>
+							ORDER BY a.authgroup_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'authgroupGbCdNm')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY a.authgroup_gb_cd DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY a.authgroup_gb_cd ASC
+						</when>
+						<otherwise>
+							ORDER BY a.authgroup_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<otherwise>
+					ORDER BY a.authgroup_oid DESC
+				</otherwise>
+			</choose>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+			ORDER BY a.authgroup_oid DESC
+		</if>
+	</sql>
+  <select id="selectAuthgroupCount" resultType="int">
+        SELECT count(distinct a.authgroup_oid)
+          FROM portal.portal_authgroup_tb a
+          LEFT JOIN portal.portal_authgroupusermap_tb a2 ON (a2.authgroup_oid = a.authgroup_oid)
+          <include refid="whereByAuthgroup"/>
+	</select>
+	<select id="selectAuthgroupList" resultType="authgroupVo">
+        SELECT distinct
+        a.authgroup_nm,
+        a.authgroup_desc,
+        a.authgroup_use_fl,
+        a.authgroup_gb_cd,
+        a.authgroup_oid,
+        a.authgroup_id,
+        c1.code_name AS authgroup_gb_cd_nm
+        FROM portal.portal_authgroup_tb a
+        LEFT JOIN portal.portal_code_tb c1 ON c1.code_id = a.authgroup_gb_cd
+        LEFT JOIN portal.portal_authgroupusermap_tb a2 ON a2.authgroup_oid = a.authgroup_oid
+           <include refid="whereByAuthgroup"/>
+		  <include refid="orderByAuthgroup"/>
+		  <include refid="limitPage"/>
+	</select>
+	<insert id="insertAuthgroup" parameterType="srchAuthgroupVo">
+	      INSERT INTO portal.portal_authgroup_tb
+	           ( authgroup_nm,
+		        authgroup_gb_cd,
+		        authgroup_use_fl,
+		        authgroup_cre_usr_id,
+		        authgroup_desc,
+		        authgroup_cre_dt,
+		        authgroup_oid
+	           ) VALUES 
+	           ( #{authgroupNm}
+             , #{authgroupGbCd}
+             , #{authgroupUseFl}
+             , #{authgroupCreUsrId}
+             , #{authgroupDesc}
+             ,current_timestamp
+             , #{authgroupOid}
+	           )
+	</insert>
+	<select id="selectAuthgroup" parameterType="srchAuthgroupVo" resultType="authgroupVo">
+		SELECT 	a.authgroup_oid,
+		      	a.authgroup_id,
+				a.authgroup_nm,
+				a.authgroup_gb_cd,
+				a.authgroup_use_fl,
+				a.authgroup_cre_dt,
+				a.authgroup_cre_usr_id,
+				a.authgroup_desc,
+				a.authgroup_upt_usr_id,
+				a.authgroup_upt_dt,
+		c1.code_name AS authgroup_gb_cd_nm
+        FROM portal.portal_authgroup_tb a
+        LEFT JOIN portal.portal_code_tb c1 ON c1.code_id = a.authgroup_gb_cd
+		WHERE authgroup_oid = #{authgroupOid}
+	</select>
+	<update id="updateAuthgroup" parameterType="srchAuthgroupVo">
+		UPDATE portal.portal_authgroup_tb 
+			SET authgroup_nm = #{authgroupNm}
+			 , authgroup_gb_cd = #{authgroupGbCd}
+			 , authgroup_desc = #{authgroupDesc}
+			 , authgroup_upt_usr_id = #{authgroupUptUsrId}
+			 , authgroup_upt_dt = current_timestamp
+			 , authgroup_use_fl = #{authgroupUseFl}
+		 WHERE authgroup_oid = #{authgroupOid}
+	</update>
+	<delete id="deleteAuthgroup" parameterType="long">
+		DELETE FROM portal.portal_authgroup_tb WHERE authgroup_oid = #{authgroupOid}
+	</delete>
+	
+	<delete id="deleteAuthgroupUser" parameterType="long">
+        DELETE FROM portal.portal_authgroupusermap_tb
+        WHERE authgroup_oid = #{authgroupOid}
+    </delete>
+    <delete id="deleteAuthgroupMenu" parameterType="long">
+        DELETE FROM portal.portal_authgroupmenumap_tb
+        WHERE authgroup_oid = #{authgroupOid}
+    </delete>
+    
+	<!-- 권한그룹 사용자 삭제  
+	<delete id="deleteAuthgroupuser" parameterType="authgroupusermapVo">
+		DELETE FROM portal.portal_authgroupusermap_tb WHERE authgroup_oid = #{authgroupOid}
+	</delete> -->
+	<!-- 권한그룹 사용자 리스트 카운트 -->
+	<select id="selectAuthgroupUserCount" parameterType="authgroupUserMapVo" resultType="int">
+        SELECT count(*)
+          FROM portal.portal_authgroupusermap_tb WHERE authgroup_oid = #{authgroupOid}
+	</select>
+	<!-- 권한그룹 사용자 리스트  -->
+	<select id="selectAuthgroupUserList" resultType="authgroupUserMapVo">
+        SELECT a.user_id,
+               a.authgroup_oid
+          FROM portal.portal_authgroupusermap_tb a
+         WHERE a.authgroup_oid = #{authgroupOid}
+         ORDER BY a.user_id DESC
+	</select>
+	<!-- 권한그룹 사용자 생성  
+	<insert id="insertAuthgroupuser" parameterType="authgroupusermapVo">
+	      INSERT INTO portal.portal_authgroupusermap_tb
+	           ( authgroup_oid,
+		        user_id
+	           ) VALUES 
+	           ( #{authgroupOid}
+             ,#{userId}
+	           )
+	</insert>-->
+	<insert id="insertAuthgroupUser" parameterType="map">
+        /* AuthGroup.insertAuthGroupUser   */
+        INSERT INTO portal.portal_authgroupusermap_tb (
+             authgroup_oid,
+		     user_id
+        ) VALUES (
+             #{authgroupOid}
+            ,#{userId}
+        )
+    </insert>
+    <!-- 권한그룹 메뉴 리스트  -->
+	<select id="selectAuthgroupMenuList" resultType="authgroupMenuMapVo">
+         
+        SELECT t1.menu_oid
+			 , t1.menu_nm
+			 , t1.menu_url 
+			 , t1.menu_parent_id
+			 , t1.menu_use_fl
+			 , t1.menu_gb_cd
+			 , t1.menu_ord
+			 , t2.programgroup_use_fl
+			 , am.authgroup_oid
+        	 , am.read_yn
+        	 , am.write_yn
+        	 , am.modified_yn
+        	 , am.delete_yn
+		  FROM portal.portal_menu_tb t1
+	 LEFT JOIN portal.portal_programgroup_tb t2 ON (t1.program_grp_oid = t2.programgroup_oid)
+	 LEFT JOIN (select * from portal.portal_authgroupmenumap_tb where authgroup_oid = #{authgroupOid}) am ON (am.menu_oid = t1.menu_oid)
+		 WHERE t1.menu_use_fl = 'Y'
+		   AND t1.menu_gb_cd = #{menuGbCd}
+<!--            AND t1.menu_parent_id != 0 -->
+<!--            AND t1.menu_url != '' -->
+		 ORDER BY t1.menu_ord asc
+         
+	</select>
+	<!-- 권한그룹 메뉴 insert -->
+	<insert id="insertAuthgroupMenu" parameterType="srchAuthgroupMenuMapVo">
+        /* AuthGroup.insertAuthGroupUser   */
+        INSERT INTO portal.portal_authgroupmenumap_tb (
+             authgroup_oid,
+		     menu_oid,
+		     read_yn,
+        	 write_yn,
+        	 modified_yn,
+        	 delete_yn
+		     
+        ) VALUES (
+             #{authgroupOid}
+            ,#{menuOid}
+            ,#{readYn}
+            ,#{writeYn}
+            ,#{modifiedYn}
+            ,#{deleteYn}
+        )
+    </insert>
+</mapper>

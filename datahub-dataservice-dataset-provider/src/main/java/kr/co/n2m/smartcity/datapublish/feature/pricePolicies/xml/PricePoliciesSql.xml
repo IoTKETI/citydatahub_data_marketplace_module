@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.datapublish.feature.pricePolicies.mapper.PricePoliciesMapper">
+    <sql id="limitPage">
+    	<if test="paging">
+        	OFFSET #{startIndex} LIMIT #{pageListSize}
+        </if>
+    </sql>
+    
+    <sql id="whereByPricePolicies">
+        <where>
+            <choose>
+                <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchType, 'title')">
+                    <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchValue)">
+                        dpp.title LIKE CONCAT('%', #{searchValue}, '%')
+                    </if>
+                </when>
+                <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchType, 'traffic')">
+                    <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchTrafficType)">
+                        AND dpp.traffic_type = #{searchTrafficType}
+                    </if>
+                </when>
+                <when test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@equals(searchType, 'use')">
+                    AND dpp.use_tf = #{searchUseTf}
+                </when>
+                <otherwise>
+                    <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(searchValue)">
+                        AND dpp.title LIKE CONCAT('%', #{searchValue}, '%')
+                    </if>
+                </otherwise>
+            </choose>
+            
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(fromDate)">
+                <![CDATA[  AND dpp.created_at >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+            </if>
+            <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(toDate)">
+                <![CDATA[  AND dpp.created_at <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+            </if>
+        </where>
+    </sql>
+    <sql id="orderByPricePolicies">
+        ORDER BY dpp.created_at DESC
+    </sql>
+    <select id="selectPricePoliciesCount" parameterType="SrchPricePoliciesVo" resultType="int">
+        SELECT COUNT(*) FROM data_publish.dh_price_policy dpp
+        <include refid="whereByPricePolicies"/>
+    </select>
+    <select id="selectPricePoliciesList" parameterType="SrchPricePoliciesVo" resultType="PricePoliciesVo">
+        SELECT dpp.policy_id         AS id
+             , dpp.title             AS title
+             , dpp.use_tf            AS use_tf
+             , dpp.traffic_type      AS traffic_type
+             , c1.code_name          AS traffic_type_name
+             , dpp.daliy_limit       AS limit
+             , dpp.created_at        AS created_at
+             , dpp.creator_id        AS creator_id
+             , dpp.modified_at       AS modified_at
+             , dpp.modifier_id       AS modifier_id
+          FROM data_publish.dh_price_policy dpp
+     LEFT JOIN data_publish.portal_code_tb c1 ON c1.code_id = dpp.traffic_type
+          <include refid="whereByPricePolicies"/>
+          <include refid="orderByPricePolicies"/>
+          <include refid="limitPage"/>
+    </select>
+    <select id="selectPricePolicies" parameterType="long" resultType="PricePoliciesVo">
+        SELECT policy_id         AS id
+             , title             AS title
+             , use_tf            AS use_tf
+             , traffic_type      AS traffic_type
+             , c1.code_name      AS traffic_type_name
+             , daliy_limit       AS limit
+             , created_at        AS created_at
+             , creator_id        AS creator_id
+             , modified_at       AS modified_at
+             , modifier_id       AS modifier_id
+          FROM data_publish.dh_price_policy dpp
+     LEFT JOIN data_publish.portal_code_tb c1 ON c1.code_id = dpp.traffic_type
+         WHERE policy_id = #{id}
+    </select>
+    <insert id="insertPricePolicies" parameterType="SrchPricePoliciesVo">
+        INSERT INTO data_publish.dh_price_policy
+             ( policy_id
+             , title
+             , use_tf
+             , traffic_type
+             , daliy_limit
+             , created_at
+             , creator_id
+             ) VALUES
+             ( #{id}
+             , #{title}
+             , #{useTf}
+             , #{trafficType}
+             , #{limit}
+             , current_timestamp
+             , #{loginUserId}
+             )
+    </insert>
+    <update id="updatePricePolicies" parameterType="SrchPricePoliciesVo">
+        UPDATE data_publish.dh_price_policy 
+           <set>
+             <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(title)">
+               title         = #{title},
+             </if>
+             <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(useTf)">
+               use_tf        = #{useTf},
+             </if>
+             <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(trafficType)">
+               traffic_type  = #{trafficType},
+             </if>
+             <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(limit)">
+               daliy_limit   = #{limit},
+             </if>
+               modified_at   = current_timestamp,
+               modifier_id   = #{loginUserId},
+           </set>
+         WHERE policy_id     = #{id}
+    </update>
+    <delete id="deletePricePolicies" parameterType="SrchPricePoliciesVo">
+        DELETE FROM data_publish.dh_price_policy WHERE policy_id = #{id}
+    </delete>
+    
+    <select id="selectPricePoliciesPeriodList" parameterType="SrchPricePoliciesPeriodVo" resultType="PricePoliciesPeriodVo">
+        SELECT dppp.period_id    AS id
+             , dppp.policy_id    AS policy_id
+             , dppp.period_cd    AS period_cd
+             , c1.code_name      AS period_nm
+          FROM data_publish.dh_price_policy_period dppp
+     LEFT JOIN data_publish.portal_code_tb c1 ON c1.code_id = dppp.period_cd
+         WHERE dppp.policy_id = #{policyId}
+    </select>
+    
+    <insert id="insertPricePoliciesPeriod" parameterType="SrchPricePoliciesPeriodVo">
+        INSERT INTO data_publish.dh_price_policy_period
+             ( period_id
+             , policy_id
+             , period_cd
+             ) VALUES
+             ( #{id}
+             , #{policyId}
+             , #{periodCd}
+             )
+    </insert>
+    <delete id="deletePricePoliciesPeriod" parameterType="SrchPricePoliciesPeriodVo">
+        DELETE FROM data_publish.dh_price_policy_period WHERE period_id = #{id} AND policy_id = #{policyId}
+    </delete>
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:p="http://www.springframework.org/schema/p"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd">
+
+    <!-- 패키지 내 Controller, Service, Repository 클래스의 auto detect를 위한 mvc 설정 -->
+    <context:component-scan base-package="kr.co.smartcity">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+    </context:component-scan>
+    
+    <!-- Tiles 매핑 관련 정보가 작성되어 있는 definition 파일 위치 정의 -->
+    <bean id="tilesConfigurer" class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+  		<property name="definitions">
+    		<list>
+     			<value>/WEB-INF/tiles.xml</value>
+    		</list>
+  		</property>
+	</bean>
+	
+	<!-- View 이름과 실제 View 자원의 이름이 같을 때 사용 -->
+	<!-- Controller에서 view 리턴 시 definition xml 파일에서 해당 name의 매핑 정보 불러옴  -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+  		<property name="viewClass" value="org.springframework.web.servlet.view.tiles3.TilesView"/>
+  		<!-- Tiles를 우선적으로 체크(tiles가 범위가 더 좁기 때문에 먼저 체크) -->
+  		<property name="order" value="1"/>  
+	</bean>
+
+    <!-- 화면처리용 JSP 파일명의  prefix, suffix 처리에 대한 mvc 설정  -->
+    <bean class="org.springframework.web.servlet.view.UrlBasedViewResolver" p:order="2"
+	    p:viewClass="org.springframework.web.servlet.view.JstlView"
+	    p:prefix="/WEB-INF/jsp/" p:suffix=".jsp"/>
+
+    <!-- 로그인 체크가 필요한 URL과 로그인 여부를 체크해준다 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+        	<mvc:exclude-mapping path="/login/**"/>
+        	<mvc:exclude-mapping path="/downloadFile.do"/>
+        	<mvc:exclude-mapping path="/error.do"/>
+		    <bean class="kr.co.smartcity.admin.common.interceptor.AuthInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/**/page*.do"/>
+            <mvc:exclude-mapping path="/pageIndex.do"/>
+		    <bean class="kr.co.smartcity.admin.common.interceptor.PageInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/login/logout.do"/>
+		    <bean class="kr.co.smartcity.admin.common.interceptor.LogoutInterceptor" />
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    
+    <mvc:annotation-driven>
+    	<mvc:message-converters>
+    		<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+    			<property name="supportedMediaTypes">
+    				<list>
+    					<value>text/plain;charset=UTF-8</value>
+	                    <value>text/html;charset=UTF-8</value>
+	                    <value>application/json;charset=UTF-8</value>
+    				</list>
+    			</property>
+    		</bean>
+    	</mvc:message-converters>
+    </mvc:annotation-driven>
+
+</beans>

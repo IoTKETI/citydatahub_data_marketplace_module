@@ -1,0 +1,55 @@
+#common
+
+server:
+  port: 7930
+  tomcat:
+    max-connections: 2000 # 서버에서 처리할 최대 연결 수
+    max-threads: 1000     # 서버에서 처리할 수 있는 최대 동시 요청 수
+    accept-count: 1000    # 요청 쓰레드가 다 사용중인 경우 대기할 큐 수
+  connection-timeout: 15000
+   
+
+spring:  application:    name: dh-dataservice-dataset-provider
+  profiles:
+    include:
+    - env
+    active: dev
+    
+logging:
+  level:
+    kr.co.n2m.smartcity: debug
+    
+    
+
+springdoc:
+  version: '1.0'
+  api-docs:
+    path: /api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  swagger-ui:
+    operations-sorter: alpha
+    tags-sorter: alpha
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    display-query-params-without-oauth2: true
+  paths-to-match:
+  - /dataservice/datasetCategories
+  - /dataservice/datasetCategories/{datasetCategoryId}
+  - /dataservice/dataset
+  - /dataservice/dataset/{datasetId}
+  - /dataservice/dataset/{datasetId}/columns
+  - /dataservice/dataset/{datasetId}/columns/{columnId}
+  - /dataservice/dataset/{datasetId}/instance
+  - /dataservice/dataset/{datasetId}/instance/{instanceId}
+  - /dataservice/dataset/{datasetId}/searchCondition
+  - /dataservice/dataset/{datasetId}/searchCondition/{searchConditionId}
+  - /dataservice/dataset/{datasetId}/wishlist
+  - /dataservice/dataset/{datasetId}/wishlist/{wishlistId}
+  - /dataservice/dataset/{datasetId}/requestUsage
+  - /dataservice/dataset/{datasetId}/requestUsage/{requestUsageId}
+  - /dataservice/dataset/{datasetId}/requestUsage/{requestUsageId}/receptions
+  - /dataservice/dataset/{datasetId}/requestUsage/{requestUsageId}/receptions/{recvId}
+  - /dataservice/dataset/{datasetId}/requestUsage/{requestUsageId}/payments
+  - /dataservice/dataset/{datasetId}/requestUsage/{requestUsageId}/payments/{payId}
+  - /dataservice/dataset/{datasetId}/data

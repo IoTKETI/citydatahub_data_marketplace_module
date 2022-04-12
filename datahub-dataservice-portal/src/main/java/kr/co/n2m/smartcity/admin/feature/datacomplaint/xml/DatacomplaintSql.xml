@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.datacomplaint.mapper.DatacomplaintMapper">
+<sql id="limitPage">
+    OFFSET #{startIndex} LIMIT #{pageListSize}
+  </sql>
+  <sql id="whereByDatacomplaint">
+  	WHERE 1=1
+  		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+			<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'datacomplainTitle')">
+				AND d.datacomplain_title LIKE CONCAT('%', #{schValue}, '%')
+			</if>
+			<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'datacomplainCreUsrNm')">
+				AND u.user_id LIKE CONCAT('%', #{schValue}, '%')
+			</if>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(fromDate)">
+				<![CDATA[  AND d.datacomplain_cre_dt >= to_timestamp(#{fromDate}, 'YYYY-MM-DD HH24:MI:SS') ]]>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(toDate)">
+				<![CDATA[  AND d.datacomplain_cre_dt <= to_timestamp(#{toDate}||' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ]]>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue3)">
+				AND d.datacomplain_gb_cd LIKE CONCAT('%', #{schValue3}, '%')
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue4)">
+				AND d.datacomplain_stat_cd LIKE CONCAT('%', #{schValue4}, '%')
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(totalSch)">
+                AND (d.datacomplain_title ILIKE CONCAT('%', #{totalSch}, '%')
+                    OR d.datacomplain_content ILIKE CONCAT('%', #{totalSch}, '%')
+                    OR d.datacomplain_answer ILIKE CONCAT('%', #{totalSch}, '%'))
+        </if>
+  	</sql>
+  <sql id="orderByDatacomplaint">
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+			<choose>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'datacomplainTitle')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY d.datacomplain_title DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY d.datacomplain_title ASC
+						</when>
+						<otherwise>
+							ORDER BY d.datacomplain_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'datacomplainGbCdNm')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY c1.code_name DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY c1.code_name ASC
+						</when>
+						<otherwise>
+							ORDER BY d.datacomplain_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'datacomplainCreUsrNm')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY u.user_id DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY u.user_id ASC
+						</when>
+						<otherwise>
+							ORDER BY d.datacomplain_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'datacomplainStatCdNm')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY c2.code_name DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY c2.code_name ASC
+						</when>
+						<otherwise>
+							ORDER BY d.datacomplain_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'datacomplainCreDt')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY d.datacomplain_cre_dt DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY d.datacomplain_cre_dt ASC
+						</when>
+						<otherwise>
+							ORDER BY d.datacomplain_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'datacomplainId')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY d.datacomplain_oid DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY d.datacomplain_oid ASC
+						</when>
+						<otherwise>
+							ORDER BY d.datacomplain_oid DESC
+						</otherwise>
+					</choose>
+				</when>
+				<otherwise>
+			ORDER BY d.datacomplain_oid DESC
+				</otherwise>
+			</choose>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+			ORDER BY d.datacomplain_oid DESC
+		</if>
+	</sql>
+  <select id="selectDatacomplaintCount" resultType="int">
+        SELECT count(*)
+          FROM portal.portal_datacomplain_tb d
+          <include refid="whereByDatacomplaint"/>
+	</select>
+	<select id="selectDatacomplaintList" resultType="datacomplaintVo">
+       SELECT d.datacomplain_id,
+        	  d.datacomplain_title,
+	          d.datacomplain_gb_cd,
+	          d.datacomplain_cre_usr_id,
+	          d.datacomplain_stat_cd,
+	          d.datacomplain_cre_dt,
+	          d.datacomplain_oid,
+	          d.datacomplain_content,
+	          d.datacomplain_answer,
+	          c1.code_name AS datacomplain_gb_cd_nm,
+	          c2.code_name AS datacomplain_stat_cd_nm
+         FROM portal.portal_datacomplain_tb d
+         LEFT JOIN portal.portal_code_tb c1 ON c1.code_id = d.datacomplain_gb_cd
+         LEFT JOIN portal.portal_code_tb c2 ON c2.code_id = d.datacomplain_stat_cd
+           <include refid="whereByDatacomplaint"/>
+		   <include refid="orderByDatacomplaint"/>
+		   <include refid="limitPage"/>
+	</select>
+	<resultMap type="DatacomplaintFileVo" id="datacomplainfileMap">
+        <id property="dcpFileOid" column="sub_dcp_file_oid"/>
+        <result property="dcpFileOid" column="sub_dcp_file_oid"/>
+        <result property="dcpFileId" column="sub_dcp_file_id"/>
+        <result property="dcpFileOrgNm" column="sub_dcp_file_org_nm"/>
+        <result property="dcpFileSavedNm" column="sub_dcp_file_saved_nm"/>
+        <result property="dcpFileSavePath" column="sub_dcp_file_save_path"/>
+        <result property="dcpFileSizeByte" column="sub_dcp_file_size_byte"/>
+        <result property="dcpFileTypeAnswer" column="sub_dcp_file_type_answer"/>
+    </resultMap>
+    <resultMap type="datacomplaintVo" id="datacomplaintMap">
+        <id property="datacomplainOid" column="main_datacomplain_oid"/>
+        <result property="datacomplainCreUsrNm" column="main_datacomplain_cre_usr_nm"/>
+        <result property="datacomplainId" column="main_datacomplain_id"/>
+        <result property="datacomplainGbCdNm" column="main_datacomplain_gb_cd_nm"/>
+        <result property="datacomplainStatCdNm" column="main_datacomplain_stat_cd_nm"/>
+        <result property="datacomplainCnt" column="main_datacomplain_cnt"/>
+        <result property="datacomplainTitle" column="main_datacomplain_title"/>
+        <result property="datacomplainGbCd" column="main_datacomplain_gb_cd"/>
+        <result property="datacomplainCreDt" column="main_datacomplain_cre_dt"/>
+        <result property="datacomplainAnswer" column="main_datacomplain_answer"/>
+        <result property="datacomplainStatCd" column="main_datacomplain_stat_cd"/>
+        <result property="datacomplainContent" column="main_datacomplain_content"/>
+        <result property="datacomplainAnswerDt" column="main_datacomplain_answer_dt"/>
+        <result property="datacomplainCreUsrId" column="main_datacomplain_cre_usr_id"/>
+        <result property="datacomplainAnswerUsrNm" column="main_datacomplain_answer_usr_nm"/>
+        <result property="datacomplainAnswerUsrId" column="main_datacomplain_answer_usr_id"/>
+        <collection property="fileList" resultMap="datacomplainfileMap" />
+    </resultMap>
+	<select id="selectDatacomplaint" resultMap="datacomplaintMap">
+		SELECT 	d.datacomplain_oid 				AS main_datacomplain_oid,
+		     	d.datacomplain_id 				AS main_datacomplain_id,
+				c1.code_name 					AS main_datacomplain_gb_cd_nm,
+		        c2.code_name 					AS main_datacomplain_stat_cd_nm,
+				d.datacomplain_cnt				AS main_datacomplain_cnt,
+				d.datacomplain_title			AS main_datacomplain_title,
+				d.datacomplain_gb_cd			AS main_datacomplain_gb_cd,
+				d.datacomplain_cre_dt			AS main_datacomplain_cre_dt,
+				d.datacomplain_answer			AS main_datacomplain_answer,
+				d.datacomplain_stat_cd			AS main_datacomplain_stat_cd,
+				d.datacomplain_content			AS main_datacomplain_content,
+				d.datacomplain_answer_dt		AS main_datacomplain_answer_dt,
+				d.datacomplain_cre_usr_id		AS main_datacomplain_cre_usr_id,
+				d.datacomplain_answer_usr_id	AS main_datacomplain_answer_usr_id,
+				f.dcp_file_oid               	AS sub_dcp_file_oid,
+				f.dcp_file_id               	AS sub_dcp_file_id,
+				f.dcp_file_org_nm           	AS sub_dcp_file_org_nm,
+				f.dcp_file_saved_nm         	AS sub_dcp_file_saved_nm,
+				f.dcp_file_save_path         	AS sub_dcp_file_save_path,
+				f.dcp_file_size_byte         	AS sub_dcp_file_size_byte,
+				f.dcp_file_type_answer         	AS sub_dcp_file_type_answer
+		FROM portal.portal_datacomplain_tb d
+        LEFT JOIN portal.portal_code_tb c1 ON (c1.code_id = d.datacomplain_gb_cd)
+        LEFT JOIN portal.portal_code_tb c2 ON (c2.code_id = d.datacomplain_stat_cd)
+        LEFT JOIN portal.portal_datacomplainfile_tb f ON (f.datacomplain_oid = d.datacomplain_oid)
+		WHERE d.datacomplain_oid = #{datacomplainOid}
+	</select>
+	<insert id="insertDatacomplaint" parameterType="srchDatacomplaintVo">
+	      INSERT INTO portal.portal_datacomplain_tb
+	           ( datacomplain_title,
+				datacomplain_gb_cd,
+				datacomplain_answer,
+				datacomplain_stat_cd,
+				datacomplain_content,
+				datacomplain_cre_usr_id,
+				datacomplain_cre_dt,
+				datacomplain_oid
+	           ) VALUES 
+	           ( #{datacomplainTitle}
+             , #{datacomplainGbCd}
+             , #{datacomplainAnswer}
+             , 'answerWait'
+             , #{datacomplainContent}
+             , #{datacomplainCreUsrId}
+             ,current_timestamp
+             , #{datacomplainOid}
+	           )
+	</insert>
+	
+	<update id="updateDatacomplaint" parameterType="srchDatacomplaintVo">
+	<!-- 질문만 업데이트  -->
+		UPDATE portal.portal_datacomplain_tb
+		   SET datacomplain_title = #{datacomplainTitle}
+			 , datacomplain_gb_cd = #{datacomplainGbCd}
+			 , datacomplain_content = #{datacomplainContent}
+			 <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(datacomplainAnswer)">
+			 , datacomplain_answer = #{datacomplainAnswer}
+			 , datacomplain_stat_cd = 'answerComplete'
+			 , datacomplain_answer_usr_id = #{datacomplainAnswerUsrId}
+			 , datacomplain_answer_dt = current_timestamp
+			 </if>
+		 WHERE datacomplain_oid = #{datacomplainOid}
+	</update>
+	
+	<update id="updateDatacomplaintPart" parameterType="srchDatacomplaintVo">
+	<!-- 답변만 업데이트  -->
+		UPDATE portal.portal_datacomplain_tb
+		  <set>
+		    <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(datacomplainAnswer)">
+		      datacomplain_answer          = #{datacomplainAnswer},
+			  datacomplain_stat_cd         = 'answerComplete',
+			  datacomplain_answer_usr_id   = #{loginUserId},
+			  datacomplain_answer_dt       = current_timestamp
+		    </if>
+		  </set>
+		 WHERE datacomplain_oid = #{datacomplainOid}
+	</update>
+	
+	<update id="updateDatacomplaintCnt" parameterType="long">
+		 UPDATE portal.portal_datacomplain_tb
+			SET datacomplain_cnt = datacomplain_cnt +1
+		 WHERE datacomplain_oid = #{datacomplainOid}
+	</update>
+	<delete id="deleteDatacomplaint" parameterType="srchDatacomplaintVo">
+		DELETE FROM portal.portal_datacomplain_tb WHERE datacomplain_oid = #{datacomplainOid}
+	</delete>
+</mapper>

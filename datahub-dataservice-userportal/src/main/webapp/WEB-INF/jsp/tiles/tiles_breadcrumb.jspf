@@ -1,0 +1,16 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+
+<ul class="breadcrumb">
+    <li class="breadcrumb__list breadcrumb__list--home material-icons">Home</li>
+                          
+    <c:forEach var="nav" items="${navigation}" varStatus="status">
+        <c:choose>
+            <c:when test="${status.last}">
+                <li class="breadcrumb__list breadcrumb__list--current">${nav.menuNm}</li>    
+            </c:when>
+            <c:otherwise>
+                <li class="breadcrumb__list">${nav.menuNm}</li>
+            </c:otherwise>
+        </c:choose>
+    </c:forEach>
+</ul>

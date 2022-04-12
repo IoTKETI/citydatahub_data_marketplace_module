@@ -1,0 +1,33 @@
+#set deploy
+
+spring.profiles: local
+spring:
+  kafka:
+    bootstrap-servers: 1.1.1.1:19092
+  mqtt:
+    mqtt-servers: tcp://1.1.1.1:1883
+  websocket:
+    websocket-servers: ws://localhost:7940/dataset/
+        
+---
+spring.profiles: dev
+spring:
+  kafka:
+    bootstrap-servers: 1.1.1.1:9092
+  mqtt:
+    mqtt-servers: tcp://1.1.1.1:1883
+  websocket:
+    websocket-servers: ws://1.1.1.1:7940/dataset/
+    
+---
+spring.profiles: test
+spring:
+  kafka:
+    bootstrap-servers: k1:9092, k2:9092, k3:9092
+    auth:
+      user_id: dataservice
+      user_pw: dataservice!123
+  mqtt:
+    mqtt-servers: tcp://1.1.1.1:1883
+  websocket:
+    websocket-servers: ws://1.1.1.1:7940/dataset/

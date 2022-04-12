@@ -1,0 +1,21 @@
+.tippy-tooltip.gradient-theme{
+  font-family: 'Spoqa Han Sans';
+  font-weight: 400;
+  box-shadow: rgb(201, 160, 255) 0px 8px 12px;
+  background: linear-gradient(130deg, rgb(80, 123, 244), rgb(255, 139, 203));
+}
+.tippy-tooltip.gradient-theme[data-placement^='right'] .tippy-arrow {
+  border-right-color: rgb(80, 123, 244);
+}
+.tippy-tooltip[data-animation=scale][data-placement^='right'] {
+  -webkit-transform-origin: left;
+  transform-origin: left;
+}
+.tippy-tooltip[data-animation=scale][data-state=hidden]{
+  transform:scale(.5);
+  opacity:0;
+}
+.tippy-tooltip[data-inertia][data-state=visible] { 
+  -webkit-transition-timing-function: cubic-bezier(.54,1.5,.38,1.11);
+  transition-timing-function: cubic-bezier(.54,1.5,.38,1.11);
+}

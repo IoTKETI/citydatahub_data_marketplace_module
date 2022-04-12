@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.menu.mapper.MenuMapper">
+	<select id="selectMenuList" resultType="menuVo">
+		SELECT t1.menu_oid
+			 , t1.menu_id
+			 , t1.menu_nm
+			 , t1.menu_url
+			 , t1.menu_ord
+			 , t1.menu_parent_id
+			 , t1.menu_gb_cd
+			 , t1.menu_param
+			 , t1.menu_use_fl
+			 , t1.program_grp_oid
+			 , t2.programgroup_nm AS program_grp_nm
+			 , t2.programgroup_use_fl
+		  FROM portal.portal_menu_tb t1
+	 LEFT JOIN portal.portal_programgroup_tb t2 ON (t1.program_grp_oid = t2.programgroup_oid)
+	   <where>
+	       <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(menuGbCd)">
+	           t1.menu_gb_cd = #{menuGbCd}
+	       </if>
+	       <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(menuUseFl)">
+               t1.menu_use_fl = #{menuUseFl}
+           </if>
+	   </where>
+		 ORDER BY t1.menu_ord ASC
+	</select>
+	<select id="selectAuthMenuList" resultType="menuVo">
+        select menu_oid
+	         , menu_parent_id
+	         , menu_id
+	         , menu_nm
+	         , menu_ord
+	         , menu_url
+	         , menu_gb_cd
+	      from portal.portal_menu_tb
+	     where menu_parent_id = 0
+	       and menu_gb_cd = #{menuGbCd}
+	     union all
+	    select t1.menu_oid
+	         , t1.menu_parent_id
+	         , t1.menu_id
+	         , t1.menu_nm
+	         , t1.menu_ord
+	         , t1.menu_url
+	         , t1.menu_gb_cd
+	      from portal.portal_menu_tb t1
+	 left join (select distinct t3.menu_oid 
+	              from portal.portal_authgroupusermap_tb t1 
+	         left join portal.portal_authgroup_tb t2           on t1.authgroup_oid = t2.authgroup_oid
+	         left join portal.portal_authgroupmenumap_tb t3    on t1.authgroup_oid = t3.authgroup_oid 
+	             where t2.authgroup_use_fl = 'Y'
+	               and t1.user_id = #{menuCreUsrId}
+	               and t3.read_yn = 'Y') tb                    on t1.menu_oid = tb.menu_oid
+	     where t1.menu_use_fl = 'Y'
+	     <if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals('adminPortal', menuGbCd)">
+           and tb.menu_oid is not null
+         </if>
+	       and menu_gb_cd = #{menuGbCd}
+	</select>
+	
+	<select id="selectMenu" parameterType="long" resultType="menuVo">
+		SELECT t1.menu_oid
+			 , t1.menu_id
+			 , t1.menu_nm
+			 , t1.menu_url
+			 , t1.menu_cre_dt
+			 , t1.menu_cre_usr_id
+			 , t1.menu_upt_dt
+			 , t1.menu_ord
+			 , t1.menu_parent_id
+			 , t2.menu_nm AS menu_parent_nm
+			 , t1.menu_gb_cd
+			 , t1.menu_param
+			 , t1.menu_use_fl
+			 , t1.menu_upt_usr_id
+			 , t1.program_grp_oid
+			 , t3.programgroup_nm AS program_grp_nm
+		  FROM portal.portal_menu_tb t1
+		  LEFT JOIN portal.portal_menu_tb t2 ON (t1.menu_parent_id = t2.menu_oid)
+		  LEFT JOIN portal.portal_programgroup_tb t3 ON (t1.program_grp_oid = t3.programgroup_oid)
+		 WHERE t1.menu_oid = #{menuOid}
+	</select>
+	
+	<insert id="insertMenu" parameterType="srchMenuVo">
+		<selectKey resultType="string" keyProperty="menuId" order="BEFORE">
+			SELECT 'MNU' || LPAD(cast(nextval('portal.seq_portal_menu_tb') as varchar(6)) , 3, '0')
+		</selectKey>
+		INSERT INTO portal.portal_menu_tb
+			 ( menu_oid
+			 , menu_id
+			 , menu_nm
+			 , menu_url
+			 , menu_ord
+			 , menu_parent_id
+			 , menu_gb_cd
+			 , menu_param
+			 , menu_use_fl
+			 , program_grp_oid
+			 , menu_cre_dt
+			 , menu_cre_usr_id
+			 ) VALUES 
+			 ( #{menuOid}
+			 , #{menuId}
+			 , #{menuNm}
+			 , #{menuUrl}
+			 , #{menuOrd}
+			 , #{menuParentId}
+			 , #{menuGbCd}
+			 , #{menuParam}
+			 , #{menuUseFl}
+			 , #{programGrpOid}
+			 , current_timestamp
+			 , #{menuCreUsrId}
+			 )
+	</insert>
+	<update id="updateMenu" parameterType="srchMenuVo">
+		UPDATE portal.portal_menu_tb 
+		   SET menu_id           = #{menuId}
+			 , menu_nm           = #{menuNm}
+			 , menu_url          = #{menuUrl}
+			 , menu_ord          = #{menuOrd}
+			 , menu_parent_id    = #{menuParentId}
+			 , menu_gb_cd        = #{menuGbCd}
+			 , menu_param        = #{menuParam}
+			 , menu_use_fl       = #{menuUseFl}
+			 , program_grp_oid   = #{programGrpOid}
+			 , menu_upt_dt       = current_timestamp
+			 , menu_upt_usr_id   = #{menuUptUsrId}
+		 WHERE menu_oid = #{menuOid}
+	</update>
+	<delete id="deleteMenu" parameterType="srchMenuVo">
+		DELETE FROM portal.portal_menu_tb WHERE menu_oid = #{menuOid}
+	</delete>
+	
+    <delete id="deleteAuthgroupMenu" parameterType="srchMenuVo">
+        DELETE FROM portal.portal_authgroupmenumap_tb WHERE menu_oid = #{menuOid}
+    </delete>
+</mapper>

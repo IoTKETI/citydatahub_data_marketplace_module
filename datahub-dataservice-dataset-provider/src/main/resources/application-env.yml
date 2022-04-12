@@ -1,0 +1,121 @@
+#set deploy
+
+spring.profiles: local
+spring:
+  datasource:
+    url: jdbc:postgresql://1.1.1.1:5434/PORTAL
+    username: smartcity_data
+    password: dpsxndpa
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 20
+  servlet:
+    multipart:
+      maxFileSize: 100MB
+      maxRequestSize: 100MB
+
+  kafka:
+    bootstrap-servers: 1.1.1.1:9092
+    
+  serverIp : 1.1.1.1:18899
+    
+eureka:
+  client:
+    enabled: false
+    serviceUrl:
+      defaultZone: http://localhost:9761/eureka/
+    healthcheck:
+      enabled: true
+      
+smartcity:
+  datacore:
+    server: http://1.1.1.1:49082
+  datamanager:
+    server: http://1.1.1.1:49080
+  auth:
+    server: http://1.1.1.1:30117
+
+file:
+  upload-path: /opt/smartcity
+---
+spring.profiles: dev
+spring:
+  datasource:
+    url: jdbc:postgresql://1.1.1.1:5434/PORTAL
+    username: smartcity_data
+    password: dpsxndpa
+    hikari:
+      maximum-pool-size: 4
+  servlet:
+    multipart:
+      maxFileSize: 100MB
+      maxRequestSize: 100MB
+  kafka:
+    bootstrap-servers: 1.1.1.1:9092
+    
+  serverIp : 1.1.1.1:7930
+    
+eureka:
+  client:
+    enabled: false
+    serviceUrl:
+      defaultZone: http://1.1.1.1:9761/eureka/
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    ip-address: 1.1.1.1
+    
+smartcity:
+  datacore:
+    server: http://1.1.1.1:49082
+  datamanager:
+    server: http://1.1.1.1:49080
+  auth:
+    server: http://1.1.1.1:30117
+
+file:
+  upload-path: /opt/smartcity    
+---
+spring.profiles: test
+spring:
+  datasource:
+    url: jdbc:postgresql://1.1.1.1:5432/portal
+    username: smartcity_data
+    password: dpsxndpa
+    hikari:
+      maximum-pool-size: 400
+  servlet:
+    multipart:
+      maxFileSize: 100MB
+      maxRequestSize: 100MB
+      
+  kafka:
+    bootstrap-servers: k1:9092, k2:9092, k3:9092
+    auth:
+      user_id: dataservice
+      user_pw: dataservice!123    
+      
+  serverIp : 1.1.1.1:7930
+      
+eureka:
+  client:
+    enabled: true
+    serviceUrl:
+      defaultZone: http://1.1.1.1:8888/eureka/
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
+    ip-address: 1.1.1.1
+
+smartcity:
+  datacore:
+    server: http://1.1.1.1:8082
+  datamanager:
+    server: http://1.1.1.1:8080
+  auth:
+    server: http://1.1.1.1:30000
+    
+file:
+  upload-path: /opt/smartcity       

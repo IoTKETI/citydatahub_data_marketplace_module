@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd" 
+  version="2.1"> 
+  
+  <tlib-version>1.0</tlib-version>
+  <uri>http://www.n2m.co.kr/tags</uri>
+
+  <function>
+      <name>getCodeList</name>
+      <function-class>kr.co.smartcity.user.common.util.CodeUtil</function-class>
+      <function-signature>java.util.List getCodeList(java.lang.String)</function-signature>
+  </function>
+</taglib> 

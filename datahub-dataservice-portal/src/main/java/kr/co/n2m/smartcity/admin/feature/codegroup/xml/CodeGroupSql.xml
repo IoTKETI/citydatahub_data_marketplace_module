@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.codegroup.mapper.CodeGroupMapper">
+	<sql id="limitPage">
+		<if test="isPaging">
+			OFFSET #{startIndex} LIMIT #{pageListSize}
+		</if>
+	</sql>
+	<sql id="whereByCodeGroup">
+		WHERE 1=1
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(schValue)">
+			<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'groupid')">
+				AND t1.codegroup_id LIKE CONCAT('%', #{schValue}, '%')
+			</if>
+			<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(schCondition, 'groupnm')">
+				AND t1.codegroup_name LIKE CONCAT('%', #{schVainsertCodeGrouplue}, '%')
+			</if>
+		</if>
+	</sql>
+	<sql id="orderByCodeGroup">
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isNotEmpty(sortField)">
+			<choose>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'codeGroupId')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY t1.codegroup_id DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY t1.codegroup_id ASC
+						</when>
+						<otherwise>
+							ORDER BY t1.codegroup_col DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'codeGroupName')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY t1.codegroup_name DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY t1.codegroup_name ASC
+						</when>
+						<otherwise>
+							ORDER BY t1.codegroup_col DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'codeGroupDesc')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY t1.codegroup_desc DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY t1.codegroup_desc ASC
+						</when>
+						<otherwise>
+							ORDER BY t1.codegroup_col DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'codeGroupCol')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY t1.codegroup_col DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY t1.codegroup_col ASC
+						</when>
+						<otherwise>
+							ORDER BY t1.codegroup_col DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'codeGroupUseFl')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY t1.codegroup_use_fl DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY t1.codegroup_use_fl ASC
+						</when>
+						<otherwise>
+							ORDER BY t1.codegroup_col DESC
+						</otherwise>
+					</choose>
+				</when>
+				<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortField, 'codeGroupCreDt')">
+					<choose>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'descending')">
+							ORDER BY t1.codegroup_cre_dt DESC
+						</when>
+						<when test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@equals(sortOrder, 'ascending')">
+							ORDER BY t1.codegroup_cre_dt ASC
+						</when>
+						<otherwise>
+							ORDER BY t1.codegroup_col DESC
+						</otherwise>
+					</choose>
+				</when>
+				<otherwise>
+					ORDER BY t1.codegroup_col DESC
+				</otherwise>
+			</choose>
+		</if>
+		<if test="@kr.co.n2m.smartcity.admin.common.utils.StringUtil@isEmpty(sortField)">
+			ORDER BY t1.codegroup_col DESC
+		</if>
+	</sql>
+	<select id="selectCodeGroupCount" resultType="int">
+		SELECT count(*) FROM portal.portal_codegroup_tb t1
+		<include refid="whereByCodeGroup"/>
+	</select>
+	<select id="selectCodeGroupList" resultType="codeGroupVo">
+		SELECT t1.codegroup_id
+			 , t1.codegroup_name
+			 , t1.codegroup_use_fl
+			 , t1.codegroup_col
+			 , t1.codegroup_desc
+			 , t1.codegroup_cre_usr_id
+			 , t1.codegroup_cre_dt
+			 , t1.codegroup_upt_usr_id
+			 , t1.codegroup_upt_dt
+		  FROM portal.portal_codegroup_tb t1
+		  <include refid="whereByCodeGroup"/>
+		  <include refid="orderByCodeGroup"/>
+		  <include refid="limitPage"/>
+	</select>
+	<select id="selectCodeGroup" parameterType="String" resultType="codeGroupVo">
+		SELECT codegroup_id
+			 , codegroup_name
+			 , codegroup_use_fl
+			 , codegroup_col
+			 , codegroup_desc
+			 , codegroup_cre_usr_id
+			 , codegroup_cre_dt
+			 , codegroup_upt_usr_id
+			 , codegroup_upt_dt
+		  FROM portal.portal_codegroup_tb
+		 WHERE codegroup_id = #{codeGroupId}
+	</select>
+	
+	<insert id="insertCodeGroup" parameterType="srchCodeGroupVo">
+		INSERT INTO portal.portal_codegroup_tb
+			 ( codegroup_id
+			 , codegroup_name
+			 , codegroup_use_fl
+			 , codegroup_col
+			 , codegroup_desc
+			 , codegroup_cre_usr_id
+			 , codegroup_cre_dt
+			 ) VALUES 
+			 ( #{codeGroupId}
+			 , #{codeGroupName}
+			 , #{codeGroupUseFl}
+			 , #{codeGroupCol}
+			 , #{codeGroupDesc}
+			 , #{codeGroupCreUsrId}
+			 , current_timestamp
+			 )
+	</insert>
+	<update id="updateCodeGroup" parameterType="srchCodeGroupVo">
+		UPDATE portal.portal_codegroup_tb 
+		   SET codegroup_name       = #{codeGroupName}
+			 , codegroup_use_fl     = #{codeGroupUseFl}
+			 , codegroup_col        = #{codeGroupCol}
+			 , codegroup_desc       = #{codeGroupDesc}
+			 , codegroup_upt_usr_id = #{codeGroupUptUsrId}
+			 , codegroup_upt_dt     = current_timestamp
+		 WHERE codegroup_id         = #{codeGroupId}
+	</update>
+	
+	<resultMap type="codeVo" id="codeMap">
+		<id     column="sub_code_id"              property="codeId"/>
+		<result column="sub_code_name"            property="codeName"/>
+		<result column="sub_code_use_fl"          property="codeUseFl"/>
+		<result column="sub_code_cre_dt"          property="codeCreDt"/>
+		<result column="sub_code_cre_usr_id"      property="codeCreUsrId"/>
+		<result column="sub_code_sort"            property="codeSort"/>
+		<result column="sub_code_desc"            property="codeDesc"/>
+		<result column="sub_code_upt_usr_id"      property="codeUptUsrId"/>
+		<result column="sub_code_upt_dt"          property="codeUptDt"/>
+		<result column="sub_codegroup_id"         property="codeGroupId"/>
+	</resultMap>
+	<resultMap type="codeGroupVo" id="codeGroupMap">
+		<id     column="grp_codegroup_id"         property="codeGroupId"/>
+		<result column="grp_codegroup_name"       property="codeGroupName"/>
+		<result column="grp_codegroup_use_fl"     property="codeGroupUseFl"/>
+		<result column="grp_codegroup_col"        property="codeGroupCol"/>
+		<result column="grp_codegroup_desc"       property="codeGroupDesc"/>
+		<result column="grp_codegroup_cre_usr_id" property="codeGroupCreUsrId"/>
+		<result column="grp_codegroup_cre_dt"     property="codeGroupCreDt"/>
+		<result column="grp_codegroup_upt_usr_id" property="codeGroupUptUsrId"/>
+		<result column="grp_codegroup_upt_dt"     property="codeGroupUptDt"/>
+		<collection property="codeList" resultMap="codeMap"/>
+	</resultMap>
+	<select id="selectAllCode" parameterType="srchCodeGroupVo" resultMap="codeGroupMap">
+		SELECT t1.codegroup_id	         AS grp_codegroup_id
+			 , t1.codegroup_name         AS grp_codegroup_name
+			 , t1.codegroup_use_fl       AS grp_codegroup_use_fl
+			 , t1.codegroup_col          AS grp_codegroup_col
+			 , t1.codegroup_desc         AS grp_codegroup_desc
+			 , t1.codegroup_cre_usr_id   AS grp_codegroup_cre_usr_id
+			 , t1.codegroup_cre_dt       AS grp_codegroup_cre_dt
+			 , t1.codegroup_upt_usr_id   AS grp_codegroup_upt_usr_id
+			 , t1.codegroup_upt_dt       AS grp_codegroup_upt_dt
+			 , t2.code_id                AS sub_code_id
+			 , t2.code_name              AS sub_code_name
+			 , t2.code_use_fl            AS sub_code_use_fl
+			 , t2.code_cre_dt            AS sub_code_cre_dt
+			 , t2.code_cre_usr_id        AS sub_code_cre_usr_id
+			 , t2.code_sort              AS sub_code_sort
+			 , t2.code_desc              AS sub_code_desc
+			 , t2.code_upt_usr_id        AS sub_code_upt_usr_id
+			 , t2.code_upt_dt            AS sub_code_upt_dt
+			 , t2.codegroup_id           AS sub_codegroup_id
+		  FROM portal.portal_codegroup_tb t1
+	 LEFT JOIN portal.portal_code_tb t2 ON (t1.codegroup_id = t2.codegroup_id)
+         WHERE t2.code_use_fl = 'Y'
+	  ORDER BY t1.codegroup_col ASC
+	         , t2.code_sort ASC
+	</select>
+	<select id="selectCodeGroupCountById" resultType="int">
+		SELECT COUNT(*) FROM portal.portal_codegroup_tb WHERE codegroup_id = #{codeGroupId}
+	</select>
+</mapper>
+

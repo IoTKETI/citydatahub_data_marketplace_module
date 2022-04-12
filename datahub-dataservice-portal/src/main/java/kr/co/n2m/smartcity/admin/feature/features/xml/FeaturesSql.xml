@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.admin.feature.features.mapper.FeaturesMapper">
+
+	<select id="selectFeaturesList" parameterType="SrchFeaturesVo" resultType="FeaturesVo">
+		SELECT enabled_tf
+		     , feature_cd
+		  FROM portal.portal_ext_features
+	</select>
+	<select id="selectFeatures" parameterType="SrchFeaturesVo" resultType="FeaturesVo">
+		SELECT enabled_tf
+		     , feature_cd
+		  FROM portal.portal_ext_features
+		 WHERE feature_cd = #{featureCd}
+	</select>
+	<insert id="insertFeatures" parameterType="SrchFeaturesVo">
+		INSERT INTO portal.portal_ext_features
+		     ( enabled_tf
+		     , feature_cd
+		     ) VALUES 
+		     ( #{enabledTf}
+		     , #{featureCd}
+		     )
+	</insert>
+	<update id="updateFeatures" parameterType="SrchFeaturesVo">
+		UPDATE portal.portal_ext_features
+		   SET enabled_tf = #{enabledTf}
+		 WHERE feature_cd = #{featureCd}
+	</update>
+</mapper>

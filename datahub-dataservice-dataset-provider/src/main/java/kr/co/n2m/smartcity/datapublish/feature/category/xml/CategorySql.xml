@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.n2m.smartcity.datapublish.feature.category.mapper.CategoryMapper">
+	<sql id="limitPage">
+		OFFSET #{startIndex} LIMIT #{pageListSize}
+	</sql>
+    <sql id="whereByCategory">
+        WHERE 1=1
+        <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(schValue)">
+            AND c.category_nm LIKE CONCAT('%', #{schValue}, '%')
+        </if>
+        <if test="srchCategoryLevel != 0">
+            AND c.level = #{srchCategoryLevel}
+        </if>
+        <if test="srchCategoryOid != 0">
+            AND #{srchCategoryOid} = ANY(c.path)
+        </if>
+    </sql>
+    <sql id="orderByCategory">
+        ORDER BY category_oid ASC
+    </sql>
+	<select id="selectCategoryCount" parameterType="SrchCategoryVo" resultType="int">
+		WITH RECURSIVE new_category_tb
+			( category_oid
+			, category_nm
+			, category_desc
+			, category_img_org_nm
+			, category_img_save_nm
+			, category_img_save_path
+			, category_img_size
+			, category_parent_oid
+			, category_cre_usr_id
+			, level
+			, path
+			, cycle
+			) AS (
+				SELECT pct.category_oid
+					 , pct.category_nm
+					 , pct.category_desc
+					 , pct.category_img_org_nm
+					 , pct.category_img_save_nm
+					 , pct.category_img_save_path
+					 , pct.category_img_size
+					 , pct.category_parent_oid
+					 , pct.category_cre_usr_id
+					 , 1
+				     , array[category_oid]
+				     , false
+				  FROM data_publish.portal_category_tb pct 
+				 WHERE pct.category_parent_oid = 0
+				 UNION ALL
+				SELECT pct.category_oid
+					 , pct.category_nm
+					 , pct.category_desc
+					 , pct.category_img_org_nm
+					 , pct.category_img_save_nm
+					 , pct.category_img_save_path
+					 , pct.category_img_size
+					 , pct.category_parent_oid
+					 , pct.category_cre_usr_id
+					 , new_pct.level + 1
+				     , new_pct.path || pct.category_oid
+				     , pct.category_oid = ANY(path)
+				  FROM data_publish.portal_category_tb pct
+				     , new_category_tb new_pct
+				 WHERE pct.category_parent_oid = new_pct.category_oid
+				   AND not cycle
+			) SELECT COUNT(*) FROM new_category_tb c
+        <include refid="whereByCategory"/>
+	</select>
+	<select id="selectCategoryList" parameterType="SrchCategoryVo" resultType="CategoryVo">
+		WITH RECURSIVE new_category_tb
+			( category_oid
+			, category_nm
+			, category_desc
+			, category_img_org_nm
+			, category_img_save_nm
+			, category_img_save_path
+			, category_img_size
+			, category_parent_oid
+			, category_cre_usr_id
+			, level
+			, path
+			, cycle
+			) AS (
+				SELECT pct.category_oid
+					 , pct.category_nm
+					 , pct.category_desc
+					 , pct.category_img_org_nm
+					 , pct.category_img_save_nm
+					 , pct.category_img_save_path
+					 , pct.category_img_size
+					 , pct.category_parent_oid
+					 , pct.category_cre_usr_id
+					 , 1
+				     , array[category_oid]
+				     , false
+				  FROM data_publish.portal_category_tb pct 
+				 WHERE pct.category_parent_oid = 0
+				 UNION ALL
+				SELECT pct.category_oid
+					 , pct.category_nm
+					 , pct.category_desc
+					 , pct.category_img_org_nm
+					 , pct.category_img_save_nm
+					 , pct.category_img_save_path
+					 , pct.category_img_size
+					 , pct.category_parent_oid
+					 , pct.category_cre_usr_id
+					 , new_pct.level + 1
+				     , new_pct.path || pct.category_oid
+				     , pct.category_oid = ANY(path)
+				  FROM data_publish.portal_category_tb pct
+				     , new_category_tb new_pct
+				 WHERE pct.category_parent_oid = new_pct.category_oid
+				   AND not cycle
+			) SELECT * FROM new_category_tb c
+        <include refid="whereByCategory"/>
+        <include refid="orderByCategory"/>
+	</select>
+	<insert id="insertCategory" parameterType="srchCategoryVo">
+		INSERT INTO data_publish.portal_category_tb
+		(
+		       category_oid
+		     , category_nm
+		     , category_parent_oid
+             , category_desc
+             , category_cre_dt
+             , category_cre_usr_id
+             , category_img_org_nm
+             , category_img_save_nm
+             , category_img_save_path
+             , category_img_size
+		)
+		VALUES
+		(
+		      #{categoryOid}
+			, #{categoryNm}
+			, #{categoryParentOid}
+			, #{categoryDesc}
+			, current_timestamp
+			, #{categoryCreUsrId}
+			, #{categoryImgOrgNm}
+			, #{categoryImgSaveNm}
+			, #{categoryImgSavePath}
+			, #{categoryImgSize}
+		)
+	</insert>
+    <select id="selectCategory" resultType="categoryVo">
+        SELECT c.category_oid
+             , c.category_nm
+             , c.category_desc
+             , c.category_parent_oid
+             , p.category_nm AS category_parent_nm
+             , c.category_cre_usr_id
+             , c.category_img_org_nm
+             , c.category_img_save_nm
+             , c.category_img_save_path
+             , c.category_img_size
+          FROM data_publish.portal_category_tb c
+     LEFT JOIN data_publish.portal_category_tb p
+            ON p.category_oid = c.category_parent_oid
+         WHERE c.category_oid = #{categoryOid}
+    </select>
+    <update id="updateCategory" parameterType="srchCategoryVo">
+         UPDATE data_publish.portal_category_tb
+            SET category_nm = #{categoryNm}
+              , category_parent_oid     = #{categoryParentOid}
+              , category_desc           = #{categoryDesc}
+              , category_img_org_nm     = #{categoryImgOrgNm}
+              , category_img_save_nm    = #{categoryImgSaveNm}
+              , category_img_save_path  = #{categoryImgSavePath} 
+              , category_img_size       = #{categoryImgSize}
+              , category_upt_usr_id     = #{categoryUptUsrId}
+              , category_upt_dt         = current_timestamp
+          WHERE category_oid = #{categoryOid}
+    </update>
+    <update id="updateCategoryPart" parameterType="srchCategoryVo">
+         UPDATE data_publish.portal_category_tb
+            <set>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(categoryNm)">
+              category_nm = #{categoryNm},
+              </if>
+              <if test="categoryParentOid != 0">
+              category_parent_oid     = #{categoryParentOid},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(categoryDesc)">
+              category_desc           = #{categoryDesc},
+              </if>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(categoryImgOrgNm)">
+              category_img_org_nm     = #{categoryImgOrgNm},
+              category_img_save_nm    = #{categoryImgSaveNm},
+              category_img_save_path  = #{categoryImgSavePath},
+              category_img_size       = #{categoryImgSize},
+              </if>
+              category_upt_usr_id     = #{categoryUptUsrId},
+              category_upt_dt         = current_timestamp
+            </set>
+          WHERE category_oid = #{categoryOid}
+    </update>
+    <delete id="deleteCategory" parameterType="srchCategoryVo">
+        DELETE FROM data_publish.portal_category_tb WHERE category_oid = #{categoryOid}
+    </delete>
+    <update id="insertCategoryFile" parameterType="srchCategoryVo">
+         UPDATE data_publish.portal_category_tb
+            <set>
+              <if test="@kr.co.n2m.smartcity.datapublish.common.utils.StringUtil@isNotEmpty(categoryImgOrgNm)">
+              category_img_org_nm     = #{categoryImgOrgNm},
+              category_img_save_nm    = #{categoryImgSaveNm},
+              category_img_save_path  = #{categoryImgSavePath},
+              category_img_size       = #{categoryImgSize},
+              </if>
+            </set>
+          WHERE category_oid = #{categoryOid}
+    </update>
+</mapper>

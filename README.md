@@ -1,8 +1,6 @@
-# 1. 데이터허브서비스 모듈개요
+# 1. 데이터 마켓플레이스 모듈 개요
 
-Data Marketplace Module of City Data Hub
-
-This is an open API of Data Service Module. The data service module API is a module suitable for the service that commercializes and distributes data from the data hub. You can find out more about City Data Hub at http://citydatahub.kr/
+데이터 마켓플레이스 모듈은 City Data Hub에 저장된 데이터를 유통하여 스마트시티 서비스에 활용하기 위한 데이터 마켓플레이스 포털을 제공합니다. 데이터 코어 모듈과의 연동을 통해 과거 이력 또는 지속적으로 수집되는 데이터를 데이터 판매자 및 구매자 간에 유통할 수 있습니다.
 
 </br>
 

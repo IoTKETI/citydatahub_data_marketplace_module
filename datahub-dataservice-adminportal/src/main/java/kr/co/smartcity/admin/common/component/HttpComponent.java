@@ -189,7 +189,7 @@ public class HttpComponent extends CommonComponent{
 	}
 	/**
 	 * 
-	 * <pre>[POST,PUT,PATCH,DELETE...] + 파라미터</pre>
+	 * <pre>[POST,PUT,PATCH,DELETE...] + �뙆�씪誘명꽣</pre>
 	 * @Author      : hk-lee
 	 * @Date        : 2020. 9. 24.
 	 * @param method
@@ -484,15 +484,20 @@ public class HttpComponent extends CommonComponent{
 			Map<String, Object> headers = new HashMap<>();
 			headers.put("Authorization", "Bearer " + this.requestClientCredentialsGrant(type));
 			
-			List<Map<String, Object>> userListMap = null;
-			
+			String userListStr = "";
 			if(type == UserType.NORMAL) {
-				userListMap = toList((String) this.get(props.getNormalUserInfoUrl(), headers, null));
+				userListStr = this.get(props.getNormalUserInfoUrl(), headers, null);
 			} else if (type == UserType.ADMIN) {
-				userListMap = toList((String) this.get(props.getAdminUserInfoUrl(), headers, null));
+				userListStr = this.get(props.getAdminUserInfoUrl(), headers, null);
 			}
 			
-			for(Map<String, Object> userMap : userListMap) {
+			Map<String, Object> userListMap = this.toMap(userListStr);
+			Set<Map.Entry<String, Object>> userEntrySet = userListMap.entrySet();
+			for(Map.Entry<String, Object> userEntry: userEntrySet) {
+				if(StringUtil.equals("totalCount", userEntry.getKey())) {
+					continue;
+				}
+				Map<String, String> userMap = (Map<String, String>) userEntry.getValue();
 				UserVo userVo = new UserVo();
 				BeanUtils.populate(userVo, userMap);
 				
@@ -628,7 +633,7 @@ public class HttpComponent extends CommonComponent{
 		for(Map.Entry<String, String> keyPair: keyPairMap.entrySet()) {
 			String orgKey = keyPair.getKey();
 			String addKey = keyPair.getValue();
-			//맵 전체 순회
+			//留� �쟾泥� �닚�쉶
 			queue.add(targetMap);
 			while(!queue.isEmpty()) {
 				Map<String, Object> child = queue.poll();
@@ -644,7 +649,7 @@ public class HttpComponent extends CommonComponent{
 								child.put(addKey, userName);
 							}
 							else {
-								child.put(addKey, ""); // null 말고 "" 값으로 설정
+								child.put(addKey, ""); // null 留먭퀬 "" 媛믪쑝濡� �꽕�젙
 							}
 						}
 					}else if(value instanceof Map) {

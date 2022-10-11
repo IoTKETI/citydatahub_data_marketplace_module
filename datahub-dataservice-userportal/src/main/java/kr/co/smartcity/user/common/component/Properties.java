@@ -63,9 +63,6 @@ public class Properties {
 	@Value("${Globals.oauthRedirectUrl}")
 	private String oauthRedirectUri;
 	
-	@Value("#{'${Globals.sso.site}'.split(',')}")
-	private List<String> authSSOSite;
-	
 	@Value("${Globals.oauthAdminServerUrl}")
 	private String authAdminServerUrl;
 	
@@ -105,8 +102,8 @@ public class Properties {
 	@Value("${Globals.blockChainServerUrl}")
 	private String blockChainServerUrl;
 	
-	@Value("${Globals.gateway.public.ip}")
-	private String gatewayPublicIp;
+	@Value("${Globals.gateway.public.url}")
+	private String gatewayPublicUrl;
 	
 	@Value("${Globals.division}")
 	private String mode;
@@ -114,9 +111,9 @@ public class Properties {
 	@Value("${Globals.platformServerUrl}")
 	private String platformServerUrl;
 	
-	@Value("${Globals.mqtt.ip}")
-	private String mqttIp;
+	@Value("${Globals.mqtt.url}")
+	private String mqttUrl;
 	
-	@Value("${Globals.websocket.ip}")
-	private String websocketIp;
+	@Value("${Globals.websocket.url}")
+	private String websocketUrl;
 }

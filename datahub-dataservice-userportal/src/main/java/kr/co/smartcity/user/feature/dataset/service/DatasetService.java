@@ -74,10 +74,10 @@ public class DatasetService extends HttpComponent{
 		Map<String, String> datasetListPageInfoMap = (Map<String, String>) datasetListMap.get("page");
 		Map<String, Object> mqttIp = new HashMap<String, Object>();
 		Map<String, Object> webSocketIp = new HashMap<String, Object>();
-		mqttIp.put("mqttIp", properties.getMqttIp());
-		webSocketIp.put("webSocketIp", properties.getWebsocketIp());
-		datasetListMap.put("mqttIp", properties.getMqttIp());
-		datasetListMap.put("webSocketIp", properties.getWebsocketIp());
+		mqttIp.put("mqttIp", properties.getMqttUrl());
+		webSocketIp.put("webSocketIp", properties.getWebsocketUrl());
+		datasetListMap.put("mqttIp", properties.getMqttUrl());
+		datasetListMap.put("webSocketIp", properties.getWebsocketUrl());
 		datasetListPageInfoMap.putAll(params);
 		return toJson(datasetListMap);
 	}
@@ -565,7 +565,7 @@ public class DatasetService extends HttpComponent{
 	 * @throws Exception
 	 */
 	public String getDatasetEndPoint() throws Exception {
-		return props.getGatewayPublicIp();
+		return props.getGatewayPublicUrl();
 	}
 
 	/**
@@ -603,8 +603,8 @@ public class DatasetService extends HttpComponent{
 		String datasetId = params.get("datasetId");
 		Map<String, Object> mqttIp = new HashMap<String, Object>();
 		Map<String, Object> webSocketIp = new HashMap<String, Object>();
-		mqttIp.put("mqttIp", properties.getMqttIp());
-		webSocketIp.put("webSocketIp", properties.getWebsocketIp());
+		mqttIp.put("mqttIp", properties.getMqttUrl());
+		webSocketIp.put("webSocketIp", properties.getWebsocketUrl());
 		List<Map<String, Object>> pricePoliciesList = toList(get(props.getDatapublishMsApiUrl() + "/dataservice/dataset/" + datasetId + "/pricePolicies", params));
 		for(Map<String, Object> policyMap : pricePoliciesList) {
 			long policyId = (long) policyMap.get("id");

@@ -503,6 +503,6 @@ public class DatasetService extends HttpComponent{
 	 * @throws Exception
 	 */
 	public String getDatasetEndPoint() throws Exception {
-		return props.getGatewayPublicIp();
+		return props.getGatewayPublicUrl();
 	}
 }

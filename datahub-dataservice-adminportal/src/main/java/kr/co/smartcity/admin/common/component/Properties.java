@@ -100,15 +100,15 @@ public class Properties {
 	@Value("${Globals.dataEntitiesServerUrl}")
 	private String dataEntitiesServerUrl;
 	
-	@Value("${Globals.gateway.public.ip}")
-	private String gatewayPublicIp;
+	@Value("${Globals.gateway.public.url}")
+	private String gatewayPublicUrl;
 	
 	@Value("${Globals.division}")
 	private String mode;
 	
-	@Value("${Globals.mqtt.ip}")
-	private String mqttIp;
+	@Value("${Globals.mqtt.url}")
+	private String mqttUrl;
 	
-	@Value("${Globals.websocket.ip}")
-	private String websocketIp;
+	@Value("${Globals.websocket.url}")
+	private String websocketUrl;
 }

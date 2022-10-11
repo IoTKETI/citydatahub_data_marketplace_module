@@ -48,7 +48,6 @@ import org.springframework.web.servlet.mvc.WebContentInterceptor;
 import kr.co.smartcity.user.common.entity.UserInfo;
 import kr.co.smartcity.user.common.util.CodeUtil;
 import kr.co.smartcity.user.common.util.MenuTreeUtil;
-import kr.co.smartcity.user.common.util.StringUtil;
 import kr.co.smartcity.user.common.vo.MenuVo;
 import kr.co.smartcity.user.feature.codegroup.service.CodeGroupService;
 import kr.co.smartcity.user.feature.common.service.LoginService;
@@ -71,13 +70,6 @@ public class PageInterceptor extends WebContentInterceptor {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws ServletException {
 		
 		try {
-			log.debug("Check [SSO] ::: " +  this.isRedirectSSO(request, response));
-			
-			if (this.isRedirectSSO(request, response)) {
-				response.sendRedirect(loginService.authorizationCode(request,response));
-				return false;
-			}
-			
 			log.debug("Check [CODE] ==> ");
 			// 코드 설정(static)
 			if(CodeUtil.isEmpty()) {
@@ -112,36 +104,6 @@ public class PageInterceptor extends WebContentInterceptor {
 		super.afterCompletion(request, response, handler, ex);
 	}
 
-	/**
-	 * <pre>SSO 처리 여부</pre>
-	 * @Author		: junyl
-	 * @Date		: 2020. 7. 27.
-	 * @param request
-	 * @param response
-	 * @return
-	 */
-	private boolean isRedirectSSO(HttpServletRequest request, HttpServletResponse response) {
-		HttpSession session = request.getSession(true);
-		String referer 		= request.getHeader("Referer");
-		
-		if (StringUtil.isNotEmpty(referer)) {
-			String redirectUri 	= request.getRequestURL().toString();
-			String ssoSite		= (String) session.getAttribute("ssoSite");
-			
-			List<String> checkSite = mainService.props.getAuthSSOSite();
-			
-			for (String site : checkSite) {
-				if ( referer.contains(site) && StringUtil.isEmpty(ssoSite)) {
-					session.setAttribute("redirectUri", redirectUri);
-					session.setAttribute("ssoSite", referer);
-					
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
 	/**
 	 * <pre>포탈 메뉴 서버 렌더링 및 Attribute 추가</pre>
 	 * @Author		: junyl

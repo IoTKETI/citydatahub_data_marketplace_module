@@ -10,7 +10,7 @@ spring:
     include:
     - env
     active: dev
-    
+
 logging:
   level:
     kr.co.n2m.smartcity: debug

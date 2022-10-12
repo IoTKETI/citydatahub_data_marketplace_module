@@ -127,7 +127,6 @@ public class AuthgroupService extends HttpComponent {
 	 * @return
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unchecked")
 	public String getAuthgroupUserList(Map<String, Object> params) throws Exception {
 		String data = get( props.getPortalMsApiUrl() + "/dataserviceUi/permissionGroup/"+ params.get("authgroupOid")+"/contact");
 		Map<String,Object> resMap = toMap(data);

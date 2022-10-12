@@ -31,12 +31,9 @@
  ******************************************************************************/
 package kr.co.smartcity.admin.feature.user.vo;
 
-import java.util.List;
-
 import org.apache.ibatis.type.Alias;
 
 import kr.co.smartcity.admin.common.vo.CommonVo;
-import kr.co.smartcity.admin.common.vo.PageVo;
 
 @Alias("userVo")
 public class UserVo extends CommonVo{
@@ -47,15 +44,6 @@ public class UserVo extends CommonVo{
 	private String nickname;    //사용자 닉네임
 	private String userGbCd;    //관리자/사용자 구분코드(Y=관리자 / N=사용자)
 	
-	private List<UserVo> userVoList;
-	
-	
-	public List<UserVo> getUserVoList() {
-		return userVoList;
-	}
-	public void setUserVoList(List<UserVo> userVoList) {
-		this.userVoList = userVoList;
-	}
 	public String getUserId() {
 		return userId;
 	}

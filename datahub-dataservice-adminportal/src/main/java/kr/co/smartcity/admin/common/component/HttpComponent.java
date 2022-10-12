@@ -490,16 +490,23 @@ public class HttpComponent extends CommonComponent{
 			} else if (type == UserType.ADMIN) {
 				userListStr = this.get(props.getAdminUserInfoUrl(), headers, null);
 			}
-			
-			Map<String, Object> userListMap = this.toMap(userListStr);
-			Set<Map.Entry<String, Object>> userEntrySet = userListMap.entrySet();
-			for(Map.Entry<String, Object> userEntry: userEntrySet) {
-				if(StringUtil.equals("totalCount", userEntry.getKey())) {
-					continue;
-				}
-				Map<String, String> userMap = (Map<String, String>) userEntry.getValue();
+
+			List<Map<String, Object>> userMapList = this.toList(userListStr);
+			for(Map<String, Object> userMap : userMapList) {
+				
+				String userId 	= (String) userMap.get("userid");
+				String nickname = (String) userMap.get("nickname");
+				String name		= (String) userMap.get("name");
+				String email 	= (String) userMap.get("email");
+				String phone 	= (String) userMap.get("phone");
+				
+				
 				UserVo userVo = new UserVo();
-				BeanUtils.populate(userVo, userMap);
+				userVo.setUserId(userId);
+				userVo.setName(name);
+				userVo.setEmail(email);
+				userVo.setPhone(phone);
+				userVo.setNickname(nickname);
 				
 				userList.add(userVo);
 			}
@@ -591,33 +598,23 @@ public class HttpComponent extends CommonComponent{
 	public Map<String, String> getUserNameMap() {
 		Map<String, String> resMap = new HashMap<>();
 		try {
-			String adminAccessToken = getClientAccessToken(UserType.ADMIN);
+			String adminAccessToken = this.getClientAccessToken(UserType.ADMIN);
 			Map<String, Object> adminHeaders = new HashMap<>();
 			adminHeaders.put("Authorization", "Bearer "+adminAccessToken);
 			
 			String adminUserListBody = this.get( props.getAdminUserInfoUrl(), adminHeaders, null);
-			Map<String, Object> adminUserListMap = toMap(adminUserListBody);
-			Set<Map.Entry<String, Object>> adminUserEntrySet = adminUserListMap.entrySet();
-			for(Map.Entry<String, Object> adminUserEntry: adminUserEntrySet) {
-				if(StringUtil.equals("totalCount", adminUserEntry.getKey())) {
-					continue;
-				}
-				Map<String, String> adminUserMap = (Map<String, String>) adminUserEntry.getValue();
-				resMap.put(adminUserMap.get("userId"), adminUserMap.get("name"));
+			List<Map<String, Object>> adminUserList = this.toList(adminUserListBody);
+			for(Map<String, Object> userMap : adminUserList) {
+				resMap.put((String) userMap.get("userid"), (String) userMap.get("name"));
 			}
 
-			String normalAccessToken = getClientAccessToken(UserType.NORMAL);
+			String normalAccessToken = this.getClientAccessToken(UserType.NORMAL);
 			Map<String, Object> normalHeaders = new HashMap<>();
-			adminHeaders.put("Authorization", "Bearer "+normalAccessToken);
+			normalHeaders.put("Authorization", "Bearer "+normalAccessToken);
 			String normalUserListBody = this.get( props.getNormalUserInfoUrl(), normalHeaders, null);
-			Map<String, Object> normalUserListMap = toMap(normalUserListBody);
-			Set<Map.Entry<String, Object>> normalUserEntrySet = normalUserListMap.entrySet();
-			for(Map.Entry<String, Object> normalUserEntry: normalUserEntrySet) {
-				if(StringUtil.equals("totalCount", normalUserEntry.getKey())) {
-					continue;
-				}
-				Map<String, String> normalUserMap = (Map<String, String>) normalUserEntry.getValue();
-				resMap.put(normalUserMap.get("userId"), normalUserMap.get("name"));
+			List<Map<String, Object>> normalUserList = this.toList(normalUserListBody);
+			for(Map<String, Object> userMap : normalUserList) {
+				resMap.put((String) userMap.get("userid"), (String) userMap.get("name"));
 			}
 			
 		} catch (Exception e) {

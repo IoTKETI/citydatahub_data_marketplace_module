@@ -58,7 +58,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -166,12 +165,13 @@ public class HttpComponent extends CommonComponent{
 				}
 			}
 			
-			if(headers != null) {
+			if (headers == null || headers.isEmpty()) {
+				setTokenInfo(builder);				
+			} else {
 				for(Map.Entry<String, String> header : headers.entrySet()) {
 					builder.addHeader(header.getKey(), header.getValue());
 				}				
 			}
-			setTokenInfo(builder);
 			
 			Request request = 	builder
 					.addHeader("Accept", "application/json")
@@ -578,7 +578,6 @@ public class HttpComponent extends CommonComponent{
 		return null;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public List<UserVo> getUserListByType(UserType type) throws Exception {
 		List<UserVo> userList = new ArrayList<UserVo>();
 		
@@ -595,17 +594,21 @@ public class HttpComponent extends CommonComponent{
 			}
 			
 			for(Map<String, Object> userMap : _userList) {
-				Set<String> keys = userMap.keySet();
-				for (String key : keys) {
-					if (userMap.get(key) instanceof Map) {
-						Map<String, Object> data = (Map<String, Object>) userMap.get(key);
-						
-						UserVo userVo = new UserVo();
-						BeanUtils.populate(userVo, data);
-						
-						userList.add(userVo);
-					}
-				}
+				String userId 	= (String) userMap.get("userid");
+				String nickname = (String) userMap.get("nickname");
+				String name		= (String) userMap.get("name");
+				String email 	= (String) userMap.get("email");
+				String phone 	= (String) userMap.get("phone");
+				
+				
+				UserVo userVo = new UserVo();
+				userVo.setUserId(userId);
+				userVo.setName(name);
+				userVo.setEmail(email);
+				userVo.setPhone(phone);
+				userVo.setNickname(nickname);
+				
+				userList.add(userVo);
 			}
 		} catch (Exception ex) {
 			LOG.error("==> fault error in getUserList : " + ex);
@@ -696,33 +699,23 @@ public class HttpComponent extends CommonComponent{
 	public Map<String, String> getUserNameMap() {
 		Map<String, String> resMap = new HashMap<>();
 		try {
-			String adminAccessToken = getClientAccessToken(UserType.ADMIN);
+			String adminAccessToken = this.getClientAccessToken(UserType.ADMIN);
 			Map<String, String> adminHeaders = new HashMap<>();
 			adminHeaders.put("Authorization", "Bearer "+adminAccessToken);
 			
-			String adminUserListBody = get( props.getAdminUserInfoUrl(), adminHeaders, null);
-			Map<String, Object> adminUserListMap = toMap(adminUserListBody);
-			Set<Map.Entry<String, Object>> adminUserEntrySet = adminUserListMap.entrySet();
-			for(Map.Entry<String, Object> adminUserEntry: adminUserEntrySet) {
-				if(StringUtil.equals("totalCount", adminUserEntry.getKey())) {
-					continue;
-				}
-				Map<String, String> adminUserMap = (Map<String, String>) adminUserEntry.getValue();
-				resMap.put(adminUserMap.get("userId"), adminUserMap.get("name"));
+			String adminUserListBody = this.get( props.getAdminUserInfoUrl(), adminHeaders, null);
+			List<Map<String, Object>> adminUserList = this.toList(adminUserListBody);
+			for(Map<String, Object> userMap : adminUserList) {
+				resMap.put((String) userMap.get("userid"), (String) userMap.get("name"));
 			}
 
-			String normalAccessToken = getClientAccessToken(UserType.NORMAL);
+			String normalAccessToken = this.getClientAccessToken(UserType.NORMAL);
 			Map<String, String> normalHeaders = new HashMap<>();
-			adminHeaders.put("Authorization", "Bearer "+normalAccessToken);
-			String normalUserListBody = get( props.getNormalUserInfoUrl(), normalHeaders, null);
-			Map<String, Object> normalUserListMap = toMap(normalUserListBody);
-			Set<Map.Entry<String, Object>> normalUserEntrySet = normalUserListMap.entrySet();
-			for(Map.Entry<String, Object> normalUserEntry: normalUserEntrySet) {
-				if(StringUtil.equals("totalCount", normalUserEntry.getKey())) {
-					continue;
-				}
-				Map<String, String> normalUserMap = (Map<String, String>) normalUserEntry.getValue();
-				resMap.put(normalUserMap.get("userId"), normalUserMap.get("name"));
+			normalHeaders.put("Authorization", "Bearer "+normalAccessToken);
+			String normalUserListBody = this.get( props.getNormalUserInfoUrl(), normalHeaders, null);
+			List<Map<String, Object>> normalUserList = this.toList(normalUserListBody);
+			for(Map<String, Object> userMap : normalUserList) {
+				resMap.put((String) userMap.get("userid"), (String) userMap.get("name"));
 			}
 			
 		} catch (Exception e) {

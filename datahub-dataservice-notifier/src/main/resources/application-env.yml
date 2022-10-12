@@ -2,10 +2,13 @@
 
 spring.profiles: local
 spring:
+  # Kafka Broker 서버 연결 정보
   kafka:
     bootstrap-servers: 1.1.1.1:19092
+  # MQTT Broker 서버 연결 정보
   mqtt:
     mqtt-servers: tcp://1.1.1.1:1883
+  # Websocket 서버 연결 정보
   websocket:
     websocket-servers: ws://localhost:7940/dataset/
         

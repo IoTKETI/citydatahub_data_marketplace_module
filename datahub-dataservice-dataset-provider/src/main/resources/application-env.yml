@@ -28,13 +28,17 @@ eureka:
       enabled: true
       
 smartcity:
+  # smartcity datacore - data service broker 서버URL
   datacore:
     server: http://1.1.1.1:49082
+  # smartcity datacore - data manager 서버URL
   datamanager:
     server: http://1.1.1.1:49080
+  # 인증인가 서버URL
   auth:
     server: http://1.1.1.1:30117
 
+#파일첨부 저장경로
 file:
   upload-path: /opt/smartcity
 ---

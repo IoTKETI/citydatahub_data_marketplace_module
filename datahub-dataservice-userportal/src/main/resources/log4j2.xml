@@ -1,32 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
+
+	<Properties>
+        <Property name="logNm">datahub-userportal</Property>
+        <Property name="layoutPattern">%style{%d{yyyy/MM/dd HH:mm:ss,SSS}}{cyan} %highlight{[%-5p]}{FATAL=bg_red, ERROR=red,
+            INFO=green, DEBUG=blue}  [%C] %style{[%t]}{yellow}- %m%n -</Property>
+    </Properties>
+    
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d %5p [%c] %m%n" />
         </Console>
+        
+        <RollingFile name="file" fileName="logs/${logNm}.log" filePattern="logs/${logNm}_%d{yyyy-MM-dd}_%i.log.gz">
+            <PatternLayout pattern="${layoutPattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="200KB"/>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
+        </RollingFile>
+  
     </Appenders>
+    
     <Loggers>
         <Logger name="java.sql" level="INFO" additivity="false">
             <AppenderRef ref="console" />
+            <AppenderRef ref="file"/>
         </Logger>
         <Logger name="kr.co.smartcity.user" level="DEBUG" additivity="false">
             <AppenderRef ref="console" />
+            <AppenderRef ref="file"/>
         </Logger>
         <Logger name="egovframework" level="DEBUG" additivity="false">
             <AppenderRef ref="console" />
+            <AppenderRef ref="file"/>
         </Logger>
 		  <!-- log SQL with timing information, post execution -->
 	    <Logger name="jdbc.sqltiming" level="INFO" additivity="false">
 	        <AppenderRef ref="console" />
+	        <AppenderRef ref="file"/>
 	    </Logger>
 	    <Logger name="org.springframework" level="INFO" additivity="false">
 	        <AppenderRef ref="console" />
+	        <AppenderRef ref="file"/>
 	    </Logger>
 	    <logger name="org.apache.commons.beanutils" level="ERROR" additivity="false">
             <AppenderRef ref="console" />
+            <AppenderRef ref="file"/>
         </logger>
         <Root level="debug">
             <AppenderRef ref="console" />
+			<AppenderRef ref="file"/>
         </Root>
     </Loggers>
 </Configuration>

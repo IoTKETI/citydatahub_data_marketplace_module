@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+
+	<!-- Log config -->
+	<springProperty name="LOGFILE_PATH" source="logging.filepath" defaultValue="logs/datahub-dataservice-portal"/>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%X{requestId}] [%thread] %-5level %logger{36} - %marker %msg%n</Pattern>
         </layout>
     </appender>
+    
+    <!-- Logging File Info. -->
+	<appender name="ROLLING-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGFILE_PATH}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        	<fileNamePattern>${LOGFILE_PATH}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>100MB</maxFileSize>
+			<maxHistory>10</maxHistory>
+		</rollingPolicy>
+		
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        	<level>debug</level>
+		</filter>
+        <encoder>
+        	<pattern>%d{yyyy-MM-dd HH:mm:ss.sss} %-5level [${APP_NAME},%X{X-B3-TraceId},%X{X-B3-SpanId}] ${PID} --- [%thread] %logger{50} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	
     <root level="error">
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="ROLLING-FILE" />
     </root>
 </configuration>
 

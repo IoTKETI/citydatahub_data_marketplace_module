@@ -18,44 +18,6 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- TOC entry 4 (class 2615 OID 16386)
--- Name: data_publish; Type: SCHEMA; Schema: -; Owner: smartcity_data
---
-
-CREATE SCHEMA data_publish;
-
-
-
--- DROP ROLE smartcity_data;
-
-CREATE ROLE smartcity_data WITH 
-	SUPERUSER
-	NOCREATEDB
-	NOCREATEROLE
-	NOINHERIT
-	LOGIN
-	NOREPLICATION
-	NOBYPASSRLS
-	CONNECTION LIMIT -1;
-	
-ALTER ROLE smartcity_data WITH PASSWORD 'dpsxndpa';	
-	
-
-ALTER SCHEMA data_publish OWNER TO smartcity_data;
-
---
--- TOC entry 3159 (class 0 OID 0)
--- Dependencies: 4
--- Name: SCHEMA data_publish; Type: COMMENT; Schema: -; Owner: smartcity_data
---
-
-COMMENT ON SCHEMA data_publish IS 'data_publish';
-
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
 
 --
 -- TOC entry 201 (class 1259 OID 16387)

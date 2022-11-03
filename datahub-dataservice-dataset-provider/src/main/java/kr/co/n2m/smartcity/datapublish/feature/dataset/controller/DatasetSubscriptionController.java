@@ -86,7 +86,7 @@ public class DatasetSubscriptionController extends HttpComponent{
 	@Value("${smartcity.datacore.server}")
 	private String dataCoreApiUrl;
 	
-	@Value("${spring.serverIp}")
+	@Value("${smartcity.dataset-provider-public-ip}")
 	private String serverIp;
 	
 	@PostMapping(value="/notification/{datasetId}", produces = "application/json; charset=utf8")

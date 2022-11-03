@@ -3,7 +3,7 @@
 spring.profiles: local
 spring:
   datasource:
-    url: jdbc:postgresql://1.1.1.1:5434/PORTAL
+    url: jdbc:postgresql://1.1.1.1:5434/DATA
     username: smartcity_data
     password: dpsxndpa
     hikari:
@@ -16,8 +16,6 @@ spring:
 
   kafka:
     bootstrap-servers: 1.1.1.1:9092
-    
-  serverIp : 1.1.1.1:18899
     
 eureka:
   client:
@@ -37,15 +35,17 @@ smartcity:
   # 인증인가 서버URL
   auth:
     server: http://1.1.1.1:30117
+  # 현재 모듈(dataset-provider) 의 외부접속 가능한 공개IP주소 (data service broker 서버로부터 subscription 의 데이터 수신(HTTP통신) 받기위함)
+  dataset-provider-public-ip : 1.1.1.1:18899
 
-#파일첨부 저장경로
 file:
+  #파일첨부 저장경로
   upload-path: /opt/smartcity
 ---
 spring.profiles: dev
 spring:
   datasource:
-    url: jdbc:postgresql://1.1.1.1:5434/PORTAL
+    url: jdbc:postgresql://1.1.1.1:5434/DATA
     username: smartcity_data
     password: dpsxndpa
     hikari:
@@ -56,8 +56,6 @@ spring:
       maxRequestSize: 100MB
   kafka:
     bootstrap-servers: 1.1.1.1:9092
-    
-  serverIp : 1.1.1.1:7930
     
 eureka:
   client:
@@ -71,20 +69,26 @@ eureka:
     ip-address: 1.1.1.1
     
 smartcity:
+  # smartcity datacore - data service broker 서버URL
   datacore:
     server: http://1.1.1.1:49082
+  # smartcity datacore - data manager 서버URL
   datamanager:
     server: http://1.1.1.1:49080
+  # 인증인가 서버URL
   auth:
     server: http://1.1.1.1:30117
+  # 현재 모듈(dataset-provider) 의 외부접속 가능한 공개IP주소 (data service broker 서버로부터 subscription 의 데이터 수신(HTTP통신) 받기위함)
+  dataset-provider-public-ip : 1.1.1.1:18899
 
 file:
+  # 첨부파일 저장경로
   upload-path: /opt/smartcity    
 ---
 spring.profiles: test
 spring:
   datasource:
-    url: jdbc:postgresql://1.1.1.1:5432/portal
+    url: jdbc:postgresql://1.1.1.1:5432/DATA
     username: smartcity_data
     password: dpsxndpa
     hikari:
@@ -100,8 +104,6 @@ spring:
       user_id: dataservice
       user_pw: dataservice!123    
       
-  serverIp : 1.1.1.1:7930
-      
 eureka:
   client:
     enabled: true
@@ -114,12 +116,18 @@ eureka:
     ip-address: 1.1.1.1
 
 smartcity:
+  # smartcity datacore - data service broker 서버URL
   datacore:
     server: http://1.1.1.1:8082
+  # smartcity datacore - data manager 서버URL
   datamanager:
     server: http://1.1.1.1:8080
+  # 인증인가 서버URL
   auth:
     server: http://1.1.1.1:30000
-    
+  # 현재 모듈(dataset-provider) 의 외부접속 가능한 공개IP주소 (data service broker 서버로부터 subscription 의 데이터 수신(HTTP통신) 받기위함)
+  dataset-provider-public-ip : 1.1.1.1:18899
+
 file:
-  upload-path: /opt/smartcity       
+  # 첨부파일 저장경로
+  upload-path: /opt/smartcity

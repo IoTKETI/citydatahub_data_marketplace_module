@@ -28,7 +28,7 @@
 		</repository>
 		<repository>
 			<id>egovframe</id>
-			<url>http://www.egovframe.go.kr/maven/</url>
+			<url>https://www.egovframe.go.kr/maven/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -38,7 +38,7 @@
 		</repository>
 		<repository>
 			<id>egovframe2</id>
-			<url>http://maven.egovframe.kr:8080/maven/</url>
+			<url>https://maven.egovframe.go.kr/maven/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -242,7 +242,8 @@
 		<dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.4</version>
+            <version>1.18.24</version>
+            <scope>provided</scope>
         </dependency>
         
         <!-- logging -->

@@ -469,6 +469,7 @@
                              },
                              grabCursor         : false,
                              loop               : true, 
+                             loopAdditionalSlides : 1,
                              keyboard           : {
                                enabled : true,
                              },

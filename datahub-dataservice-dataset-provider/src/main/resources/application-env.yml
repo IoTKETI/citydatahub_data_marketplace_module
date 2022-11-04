@@ -32,7 +32,7 @@ smartcity:
   # smartcity datacore - data manager 서버URL
   datamanager:
     server: http://1.1.1.1:49080
-  # 인증인가 서버URL
+  # 인증인가서버(사용자용 서버) URL
   auth:
     server: http://1.1.1.1:30117
   # 현재 모듈(dataset-provider) 의 외부접속 가능한 공개IP주소 (data service broker 서버로부터 subscription 의 데이터 수신(HTTP통신) 받기위함)
@@ -75,7 +75,7 @@ smartcity:
   # smartcity datacore - data manager 서버URL
   datamanager:
     server: http://1.1.1.1:49080
-  # 인증인가 서버URL
+  # 인증인가서버(사용자용 서버) URL
   auth:
     server: http://1.1.1.1:30117
   # 현재 모듈(dataset-provider) 의 외부접속 가능한 공개IP주소 (data service broker 서버로부터 subscription 의 데이터 수신(HTTP통신) 받기위함)
@@ -122,7 +122,7 @@ smartcity:
   # smartcity datacore - data manager 서버URL
   datamanager:
     server: http://1.1.1.1:8080
-  # 인증인가 서버URL
+  # 인증인가서버(사용자용 서버) URL
   auth:
     server: http://1.1.1.1:30000
   # 현재 모듈(dataset-provider) 의 외부접속 가능한 공개IP주소 (data service broker 서버로부터 subscription 의 데이터 수신(HTTP통신) 받기위함)

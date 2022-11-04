@@ -20,10 +20,12 @@ eureka:
       enabled: false
 
 smartcity:
+  # 인증인가서버(사용자용 서버) URL
   auth:
     server: http://1.1.1.1:30117
 
 file:
+  # 첨부파일 저장경로
   upload-path: /opt/smartcity
 ---
 spring.profiles: dev
@@ -49,10 +51,12 @@ eureka:
     ip-address: 1.1.1.1
 
 smartcity:
+  # 인증인가서버(사용자용 서버) URL
   auth:
     server: http://1.1.1.1:30117
     
 file:
+  # 첨부파일 저장경로
   upload-path: /opt/smartcity
 ---
 spring.profiles: test
@@ -80,8 +84,10 @@ eureka:
     ip-address: 1.1.1.1
     
 smartcity:
+  # 인증인가서버(사용자용 서버) URL
   auth:
     server: http://1.1.1.1:30000
     
 file:
+  # 첨부파일 저장경로
   upload-path: /opt/smartcity    

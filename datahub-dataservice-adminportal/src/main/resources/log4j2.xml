@@ -2,7 +2,7 @@
 <Configuration>
 	
 	<Properties>
-        <Property name="logNm">datahub-userportal</Property>
+        <Property name="logNm">datahub-adminportal</Property>
         <Property name="layoutPattern">%style{%d{yyyy/MM/dd HH:mm:ss,SSS}}{cyan} %highlight{[%-5p]}{FATAL=bg_red, ERROR=red,
             INFO=green, DEBUG=blue}  [%C] %style{[%t]}{yellow}- %m%n -</Property>
     </Properties>

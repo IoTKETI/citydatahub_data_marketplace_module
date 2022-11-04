@@ -1,14 +1,15 @@
 #common
 
-#server:
-#  port: 7910
 server:
   port: 7910
+
   
-spring:  application:    name: dh-dataservice-portal
+spring:
+  application:
+    name: dh-dataservice-portal
   profiles:
     include:
-    - env
+    - env-old
     active: dev
     
 logging:

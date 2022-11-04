@@ -92,7 +92,7 @@ public class MenuTreeUtil {
 
 			if (excludeIds != null && excludeIds.contains(menu.getMenuId())) continue;
 			
-			html += "<li id=\"" + menu.getMenuId() + "\" class=\"nav-depth1__item\"><a href=\"" + menu.getMenuUrl() + "\" class=\"nav-depth1__link\">" + menu.getMenuNm() + "</a>";
+			html += "<li id=\"" + menu.getMenuId() + "\" class=\"nav-depth1__item\"><a href=\"#\" class=\"nav-depth1__link\">" + menu.getMenuNm() + "</a>";
 			
 			List<MenuVo> childrens = menu.getChildrens();
 			if (childrens != null && childrens.size() > 0) {

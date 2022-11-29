@@ -9,7 +9,7 @@ spring:
     name: dh-dataservice-portal
   profiles:
     include:
-    - env-old
+    - env
     active: dev
     
 logging:

@@ -16,6 +16,9 @@ spring:
 
   kafka:
     bootstrap-servers: 1.1.1.1:9092
+    auth:
+      # Kafka 연결 인증 활성화여부
+      enabled: false
     
 eureka:
   client:
@@ -56,6 +59,9 @@ spring:
       maxRequestSize: 100MB
   kafka:
     bootstrap-servers: 1.1.1.1:9092
+    auth:
+      # Kafka 연결 인증 활성화여부
+      enabled: false
     
 eureka:
   client:
@@ -101,6 +107,8 @@ spring:
   kafka:
     bootstrap-servers: k1:9092, k2:9092, k3:9092
     auth:
+      # Kafka 연결 인증 활성화여부
+      enabled: false
       user_id: dataservice
       user_pw: dataservice!123    
       

@@ -9,11 +9,13 @@ server:
   connection-timeout: 15000
    
 
-spring:  application:    name: dh-dataservice-dataset-provider
+spring:
+  application:
+    name: dh-dataservice-dataset-provider
   profiles:
     include:
     - env
-    active: dev
+    active: local
     
 logging:
   level:

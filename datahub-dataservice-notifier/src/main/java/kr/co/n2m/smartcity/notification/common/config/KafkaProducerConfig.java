@@ -44,9 +44,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class KafkaProducerConfig {
 
-	@Value("${spring.profiles.active:}")
-	private String activeProfile;
-	
 	@Value("${spring.kafka.bootstrap-servers:}")
 	private String kafkaServers;
 	
@@ -56,15 +53,18 @@ public class KafkaProducerConfig {
 	@Value("${spring.kafka.auth.user_pw:}")
 	private String KAFKA_USER_PW;
 	
+	@Value("${spring.kafka.auth.enabled:}")
+	private boolean isAuthEnabled;
+	
 	private final String KAFKA_CLIENT_ID 	= "DemoProducer";
 	
 	/**
-	 * <pre>운영 Profile 이 아닌 상태의 Kafka Producer 설정 값</pre>
-	 * @Author		: junyl
-	 * @Date		: 2019. 10. 17.
+	 * <pre>Kafka Producer 설정 값 </pre>
+	 * @Author		: tklee
+	 * @Date		: 2022. 11. 30.
 	 * @return
 	 */
-	public Map<String, Object> producerDefaultConfigs() {
+	public Map<String, Object> producerConfigs() {
 		Map<String, Object> props =	new HashMap<String, Object>();
 		
 		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServers);
@@ -73,35 +73,17 @@ public class KafkaProducerConfig {
 		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		
-		return props;
-	}
-	
-	/**
-	 * <pre>운영 Profile 상태의 Kafka Producer 설정 값 </pre>
-	 * @Author		: junyl
-	 * @Date		: 2019. 10. 17.
-	 * @return
-	 */
-	public Map<String, Object> producerProdConfigs() {
-		Map<String, Object> props =	new HashMap<String, Object>();
-		
-		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServers);
-		props.put(ProducerConfig.CLIENT_ID_CONFIG, KAFKA_CLIENT_ID);
-		props.put(ProducerConfig.ACKS_CONFIG, "1");
-		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-		props.put("security.protocol", "SASL_PLAINTEXT"); 
-		props.put("sasl.mechanism", "PLAIN"); 
-		props.put("sasl.jaas.config", String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", KAFKA_USER_ID, KAFKA_USER_PW));
+		if(isAuthEnabled) {
+			props.put("security.protocol", "SASL_PLAINTEXT"); 
+			props.put("sasl.mechanism", "PLAIN"); 
+			props.put("sasl.jaas.config", String.format("org.apache.kafka.common.security.scram.ScramLoginModule required username=\"%s\" password=\"%s\";", KAFKA_USER_ID, KAFKA_USER_PW));
+		}
 		
 		return props;
 	}
 	
 	@Bean
 	public KafkaProducer<String, String> kafkaProducer() {
-		if ("test".equals(activeProfile)) {
-			return new KafkaProducer<String, String>(producerProdConfigs());	
-		}
-		return new KafkaProducer<String, String>(producerDefaultConfigs());
+		return new KafkaProducer<String, String>(producerConfigs());
 	}
 }

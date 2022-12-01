@@ -9,7 +9,7 @@ spring:
   profiles:
     include:
     - env
-    active: dev
+    active: local
 
 logging:
   level:

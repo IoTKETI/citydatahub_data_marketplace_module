@@ -10,6 +10,9 @@ spring:
       maximum-pool-size: 4
   kafka:
     bootstrap-servers: 1.1.1.1:9092
+    auth:
+      # Kafka 연결 인증 활성화여부
+      enabled: false
     
 eureka:
   client:
@@ -38,6 +41,9 @@ spring:
       maximum-pool-size: 4
   kafka:
     bootstrap-servers: 1.1.1.1:9092
+    auth:
+      # Kafka 연결 인증 활성화여부
+      enabled: false
     
 eureka:
   client:
@@ -70,6 +76,8 @@ spring:
   kafka:
     bootstrap-servers: k1:9092, k2:9092, k3:9092
     auth:
+      # Kafka 연결 인증 활성화여부
+      enabled: true
       user_id: dataservice
       user_pw: dataservice!123    
 eureka:

@@ -74,9 +74,6 @@ public class ProducerForSync extends CommonComponent{
     	
 		logger("##########################");
     	
-    	ProducerRecord<String, String> producerRecordForProduct = new ProducerRecord<String, String>(KafkaConst.PRODUCT.topic(), StringUtil.getLocalHostName("localhost"), sendDataJson);
-    	kafkaProducer.send(producerRecordForProduct, new KafkaCallBack(startTime, sendDataJson));
-    	
     	ProducerRecord<String, String> producerRecordForDataPublish = new ProducerRecord<String, String>(KafkaConst.DATAPUBLISH.topic(), StringUtil.getLocalHostName("localhost"), sendDataJson);
     	kafkaProducer.send(producerRecordForDataPublish, new KafkaCallBack(startTime, sendDataJson));
 	}

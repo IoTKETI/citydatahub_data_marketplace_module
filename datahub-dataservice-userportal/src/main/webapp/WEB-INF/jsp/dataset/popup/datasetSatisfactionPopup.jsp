@@ -87,48 +87,26 @@ var datasetSatisfactionPopupMixin={
 		createDatasetSatisfaction: function(){
 			if(Modal.REGIST()) return;
 			vm.loadingFlag = true;
-			$.ajax({
-				method:"POST",
-				url: SMC_CTX + "/mypage/token/transfer.do",
+			
+			var request = $.ajax({
+				method: "POST",
+				url: SMC_CTX + "/dataset/satisfaction/create.do",
 				contentType: "application/json",
-				dataType: "json",
 				data: JSON.stringify({
-					toId       : vm.loginUserId,
-					amount     : new String(Math.floor(vm.datasetSatisfaction.score)),
-					additional : JSON.stringify({
-						type         : "만족도",
-						datasetId    : vm.datasetSatisfaction.datasetId,
-						datasetTitle : vm.datasetSatisfaction.datasetTitle,
-					})
+					datasetId : vm.datasetSatisfaction.datasetId,
+					score     : vm.datasetSatisfaction.score,
+					review    : vm.datasetSatisfaction.review,
+					type         : "만족도",
+					datasetTitle : vm.datasetSatisfaction.datasetTitle,
 				})
-			})
-			.done(function(data){
-				if(data.result < 0){
-					alert("평점 저장 시 오류가 발생했습니다.");
-					vm.loadingFlag = false;
-					return;
-				}
-				var request = $.ajax({
-					method: "POST",
-					url: SMC_CTX + "/dataset/satisfaction/create.do",
-					contentType: "application/json",
-					data: JSON.stringify({
-						datasetId : vm.datasetSatisfaction.datasetId,
-						score     : vm.datasetSatisfaction.score,
-						review    : vm.datasetSatisfaction.review,
-					})
-				});
-				request.done(function(){
-					Modal.OK();
-					vm.closeDatasetSatisfactionPopup({}, true);
-					vm.loadingFlag = false;
-				});
-				request.fail(function(){
-					alert("평점 저장 시 오류가 발생했습니다.");
-					vm.loadingFlag = false;
-				});
-			})
-			.fail(function(){
+			});
+			request.done(function(){
+				Modal.OK();
+				vm.closeDatasetSatisfactionPopup({}, true);
+				vm.loadingFlag = false;
+				vm.getDataset();
+			});
+			request.fail(function(){
 				alert("평점 저장 시 오류가 발생했습니다.");
 				vm.loadingFlag = false;
 			});

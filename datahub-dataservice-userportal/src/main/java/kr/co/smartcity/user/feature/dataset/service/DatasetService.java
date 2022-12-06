@@ -50,6 +50,7 @@ import kr.co.smartcity.user.common.component.Properties;
 import kr.co.smartcity.user.common.util.StringUtil;
 import kr.co.smartcity.user.feature.dataset.vo.DatasetUseRequestVo;
 import kr.co.smartcity.user.feature.dataset.vo.DatasetVo;
+import kr.co.smartcity.user.feature.mypage.service.MypageService;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -58,7 +59,11 @@ import okhttp3.Response;
 @Service("datasetService")
 public class DatasetService extends HttpComponent{
 	
+	@Autowired
+	private MypageService mypageService;
+	
 	@Autowired Properties properties;
+	
 	/**
 	 * 데이터셋 목록 조회
 	 * @Author      : hk-lee
@@ -118,49 +123,6 @@ public class DatasetService extends HttpComponent{
 			}
 		}
 		datasetMap.put("enabledDatasetPayments", enabledDatasetPayments);
-		
-		
-		/**
-		 * 담당자 정보 가져오기
-		 */
-//		UserVo modelOwnerInfo = this.getUserByType((String)datasetMap.get("modelOwnerId"), UserType.NORMAL);
-//		
-//		if(modelOwnerInfo != null) {
-//			String phone = modelOwnerInfo.getPhone();
-//			String email = modelOwnerInfo.getEmail();
-//			
-//			if(StringUtil.isNotEmpty(phone)) {
-//				phone = phone.replaceAll("^(01(?:0|1|[6-9]))[.-]?(\\d{3}|\\d{4})[.-]?(\\d{4})$", "$1-****-$3");
-//			}
-//			
-//			if(StringUtil.isNotEmpty(email)) {
-//				String[] emailSplit = email.split("@");
-//				String emailId = emailSplit[0];
-//				String emailHost = emailSplit[1];
-//				String emailIdFront = emailId.substring(0, emailId.length()/2);
-//				String emailIdBack = emailId.substring(emailId.length()/2, emailId.length());
-//				emailIdFront = emailIdFront.replaceAll("[a-zA-Z]{1}", "*");
-//				email = String.format("%s%s@%s", emailIdFront, emailIdBack, emailHost);
-//			}
-//			
-//			datasetMap.put("dsModelOwnerNm"   , modelOwnerInfo.getName());
-//			datasetMap.put("dsModelOwnerPhone", phone);
-//			datasetMap.put("dsModelOwnerEmail", email);
-//		}
-		
-		
-		/**
-		 * 데이터모델명 가져오기( DataLake )
-		 */
-//		try {
-//			Map<String, Object> modelMap = this.toMap(this.getDataModel(datasetVo));
-//			if(modelMap != null) {
-//				datasetVo.setDsModelNm(modelMap != null ? (String) modelMap.get("name") : "");
-//			}
-//		} catch (Exception ex) {
-//			datasetVo.setDsModelNm("");
-//		}
-			
 		
 		return toJson(datasetMap);
 	}
@@ -505,6 +467,9 @@ public class DatasetService extends HttpComponent{
 	 * @throws Exception
 	 */
 	public String createDatasetSatisfaction(Map<String, Object> params) throws Exception {
+		if ("Y".equals(props.getBlockChainRequest())) {
+			mypageService.transferIncentiveToken(params);
+		}
 		return this.strBody(method(HttpMethod.POST.toString(), props.getDatapublishMsApiUrl() +"/dataservice/dataset/" + params.get("datasetId") + "/rating", params));
 	}
 

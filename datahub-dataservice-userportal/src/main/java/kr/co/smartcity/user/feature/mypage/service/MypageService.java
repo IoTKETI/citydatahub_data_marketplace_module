@@ -290,29 +290,33 @@ public class MypageService extends HttpComponent{
 	 */
 	@SuppressWarnings("unchecked")
 	public String getIncentiveTokenLog(Map<String, Object> params) throws Exception {
-		String userId    = (String)params.get("userId");
-		String termStart = (String)params.get("termStart");
-		String termEnd   = (String)params.get("termEnd");
-		params.put("userId"    , userId);
-		params.put("termStart" , StringUtil.isEmpty(termStart) ? "*" : termStart);
-		params.put("termEnd"   , StringUtil.isEmpty(termEnd)   ? "*" : termEnd);
-		
-		// 인센티브 토큰 발급 시 헤더 토큰은 블록체인에서 제공 해 준 값으로 하드코딩 (개발계/품질계 모두 해당)
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put("Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWRtaW5TeXN0ZW0iLCJ1c2VySWQiOiJlRFV3T1RvNlEwNDlRV1J0YVc1QWNHNTFMbU5wZEhsb2RXSXViM0puTEU5VlBXRmtiV2x1TEV3OVUyRnVJRVp5WVc1amFYTmpieXhUVkQxRFlXeHBabTl5Ym1saExFTTlWVk02T2tOT1BXTmhMbkJ1ZFM1amFYUjVhSFZpTG05eVp5eFBQWEJ1ZFM1amFYUjVhSFZpTG05eVp5eE1QVk5oYmlCR2NtRnVZMmx6WTI4c1UxUTlRMkZzYVdadmNtNXBZU3hEUFZWVCIsIm5pY2tuYW1lIjoicG51QWRtaW4iLCJlbWFpbCI6ImhvbmdnaWxkb25nQHBudS5hYy5rciIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTU3MjE2NzU4NCwiZXhwIjoxOTk5OTk5OTk5LCJhdWQiOiJQTlVNU1AiLCJpc3MiOiJ1cm46ZGF0YWh1YjpjaXR5aHViOnNlcmN1cml0eSJ9.p8I_6YXjNikfWqkFMtqKDfbXp_Bs68UmAWVtLQ4k9sKGhbSlLr9N3SQ7S8Iuo1n2I14zkuVNwXOm7a8l0i3m3krSvGaphoAlrzGpTqkTD5rrOhZfdKUnhZCzuUnWBNeYV-pVTHqZnnehT7eD_hPW0RUJ8E1Zo6GpG6j5Fl7Sx7xaJmf3_ufg3GnjilQuigTD3ji7o-qGckCBZTWkCYgFNK6LXs6UmAAiBUvmCoqedvDOsWeDm5Jugu8gmKb-Z1UoFzxaeBq76ZBazPAPq4vLTLXh2e0GpTNkXKiOy6uvgqyd6jnDNDM22f3hD5STDZ0i8Agolkq_Nk-7OXERz0f5pg");
-		
-		Response response = method(HttpMethod.POST.toString(), props.getBlockChainServerUrl() + "/incentive/query/user", params, headers);
-		
-		String resultStr = response.body().string();
-		
-		log.debug("====> " + resultStr);
-		
-		
-		Map<String, Object> resultMap = gson.fromJson(resultStr, Map.class);
-		
-		String totalBalance = get(props.getBlockChainServerUrl() + "/token/balanceOf/"+userId);
-		resultMap.put("balance", totalBalance);
-		return gson.toJson(resultMap);
+		if ("Y".equals(props.getBlockChainRequest())) {
+			String userId    = (String)params.get("userId");
+			String termStart = (String)params.get("termStart");
+			String termEnd   = (String)params.get("termEnd");
+			params.put("userId"    , userId);
+			params.put("termStart" , StringUtil.isEmpty(termStart) ? "*" : termStart);
+			params.put("termEnd"   , StringUtil.isEmpty(termEnd)   ? "*" : termEnd);
+			
+			// 인센티브 토큰 발급 시 헤더 토큰은 블록체인에서 제공 해 준 값으로 하드코딩 (개발계/품질계 모두 해당)
+			Map<String, Object> headers = new HashMap<String, Object>();
+			headers.put("Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWRtaW5TeXN0ZW0iLCJ1c2VySWQiOiJlRFV3T1RvNlEwNDlRV1J0YVc1QWNHNTFMbU5wZEhsb2RXSXViM0puTEU5VlBXRmtiV2x1TEV3OVUyRnVJRVp5WVc1amFYTmpieXhUVkQxRFlXeHBabTl5Ym1saExFTTlWVk02T2tOT1BXTmhMbkJ1ZFM1amFYUjVhSFZpTG05eVp5eFBQWEJ1ZFM1amFYUjVhSFZpTG05eVp5eE1QVk5oYmlCR2NtRnVZMmx6WTI4c1UxUTlRMkZzYVdadmNtNXBZU3hEUFZWVCIsIm5pY2tuYW1lIjoicG51QWRtaW4iLCJlbWFpbCI6ImhvbmdnaWxkb25nQHBudS5hYy5rciIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTU3MjE2NzU4NCwiZXhwIjoxOTk5OTk5OTk5LCJhdWQiOiJQTlVNU1AiLCJpc3MiOiJ1cm46ZGF0YWh1YjpjaXR5aHViOnNlcmN1cml0eSJ9.p8I_6YXjNikfWqkFMtqKDfbXp_Bs68UmAWVtLQ4k9sKGhbSlLr9N3SQ7S8Iuo1n2I14zkuVNwXOm7a8l0i3m3krSvGaphoAlrzGpTqkTD5rrOhZfdKUnhZCzuUnWBNeYV-pVTHqZnnehT7eD_hPW0RUJ8E1Zo6GpG6j5Fl7Sx7xaJmf3_ufg3GnjilQuigTD3ji7o-qGckCBZTWkCYgFNK6LXs6UmAAiBUvmCoqedvDOsWeDm5Jugu8gmKb-Z1UoFzxaeBq76ZBazPAPq4vLTLXh2e0GpTNkXKiOy6uvgqyd6jnDNDM22f3hD5STDZ0i8Agolkq_Nk-7OXERz0f5pg");
+			
+			Response response = method(HttpMethod.POST.toString(), props.getBlockChainServerUrl() + "/incentive/query/user", params, headers);
+			
+			String resultStr = response.body().string();
+			
+			log.debug("====> " + resultStr);
+			
+			
+			Map<String, Object> resultMap = gson.fromJson(resultStr, Map.class);
+			
+			String totalBalance = get(props.getBlockChainServerUrl() + "/token/balanceOf/"+userId);
+			resultMap.put("balance", totalBalance);
+			return gson.toJson(resultMap);
+		} else {
+			return null;
+		}
 		
 	}
 }

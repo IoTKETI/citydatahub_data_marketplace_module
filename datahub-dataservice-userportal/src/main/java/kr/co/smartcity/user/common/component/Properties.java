@@ -102,6 +102,9 @@ public class Properties {
 	@Value("${Globals.blockChainServerUrl}")
 	private String blockChainServerUrl;
 	
+	@Value("${Globals.blockChainRequest}")
+	private String blockChainRequest;
+	
 	@Value("${Globals.gateway.public.url}")
 	private String gatewayPublicUrl;
 	

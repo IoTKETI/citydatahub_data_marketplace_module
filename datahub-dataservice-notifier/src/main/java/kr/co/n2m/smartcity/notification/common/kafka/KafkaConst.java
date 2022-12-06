@@ -32,10 +32,8 @@
 package kr.co.n2m.smartcity.notification.common.kafka;
 
 public enum KafkaConst {
-	PRODUCT     ("ProductMS"     , "DATASET_PRODUCT_REQUEST_EVENT"),
 	DATAPUBLISH ("DataPublishMS" , "DATASET_STATUS_EVENT"),
 	PORTAL      ("PortalMS"      , "Portal_Topic"),
-	STATISTICS   ("StatisticsMS"   , "Statistics_Topic"),
 	NOTIFICATION("NotificationMS", "DATASET_NOTIFICATION_EVENT");
 	
 	private String ms;

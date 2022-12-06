@@ -81,7 +81,6 @@ public class Consumer extends CommonComponent implements ApplicationRunner {
 		
 		Collection<String> topics = new ArrayList<String>();
 		topics.add(KafkaConst.DATAPUBLISH.topic());
-		topics.add(KafkaConst.STRUCTURED_DATA_INGEST_SUCCESS_EVENT.topic());
 		topics.add(KafkaConst.DATASET_ADAPTOR_PROCESS_EVENT.topic());
 		kafkaConsumer.subscribe(topics);
 		
@@ -105,17 +104,7 @@ public class Consumer extends CommonComponent implements ApplicationRunner {
 						break;
 					}
 
-    				if ( KafkaConst.STRUCTURED_DATA_INGEST_SUCCESS_EVENT.topic().equals(topic)) {
-    					
-    					String bodyMessage = new String(b, 5, b.length - 5);
-    					
-    					Map<String, Object> sendDataMap = new HashMap<>();
-    					sendDataMap.put("code"	, KafkaMessageCode.INGESTLAYER_TO_DATA_PUBLISH.message());
-    					sendDataMap.put("data"	, bodyMessage); 
-    					
-    					message = toJson(sendDataMap);
-    					
-    				} else if ( KafkaConst.DATASET_ADAPTOR_PROCESS_EVENT.topic().equals(topic)) {
+    				if ( KafkaConst.DATASET_ADAPTOR_PROCESS_EVENT.topic().equals(topic)) {
     					Map<String, Object> sendDataMap = new HashMap<>();
     					sendDataMap.put("code"	, KafkaMessageCode.PROC_DATASET_ADAPTOR_MOD.message());
     					sendDataMap.put("data"	, message); 
